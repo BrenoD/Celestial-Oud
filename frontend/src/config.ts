@@ -22,5 +22,9 @@ export const useMockApi = config.apiUrl === '';
 
 export function assetUrl(path: string): string {
   if (/^https?:\/\//.test(path)) return path;
-  return `${config.assetBase}${path.startsWith('/') ? path : `/${path}`}`;
+  const clean = path.startsWith('/') ? path : `/${path}`;
+  if (config.assetBase) return `${config.assetBase}${clean}`;
+  // Respect Vite's base path (sub-path deploys such as GitHub Pages).
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  return `${base}${clean}`;
 }

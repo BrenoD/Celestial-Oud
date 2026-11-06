@@ -47,7 +47,10 @@ const router = createBrowserRouter([
       { path: '/checkout/confirmed/:id', element: <Confirmation /> },
     ],
   },
-]);
+], {
+  // Honour Vite's base path so the app works from a sub-folder (GitHub Pages).
+  basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/',
+});
 
 export default function App() {
   return (

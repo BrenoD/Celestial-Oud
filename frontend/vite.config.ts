@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react';
 // Static build. Every asset under /assets gets a content hash so nginx/CDN can
 // cache it forever; index.html is the only file that must not be cached.
 export default defineConfig({
+  // Sub-path deploys (e.g. GitHub Pages at /Celestial-Oud/) set VITE_BASE_PATH.
+  base: process.env.VITE_BASE_PATH || '/',
   plugins: [react()],
   resolve: {
     alias: { '@': '/src' },
