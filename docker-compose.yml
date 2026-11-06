@@ -1,0 +1,14 @@
+# Local stack. Run `docker compose up --build` and open http://localhost:8080.
+# The storefront is stateless: `docker compose up --scale storefront=3` works
+# as-is once a load balancer sits in front.
+services:
+  storefront:
+    build:
+      context: ./frontend
+      args:
+        # Point at the Go API once it exists, e.g. http://localhost:8081
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_FREE_DELIVERY_THRESHOLD: ${VITE_FREE_DELIVERY_THRESHOLD:-5000}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

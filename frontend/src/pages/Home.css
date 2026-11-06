@@ -1,0 +1,234 @@
+.hero {
+  padding-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: stretch;
+}
+.hero__copy {
+  flex: 1 1 420px;
+  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+.hero__copy .eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.18em;
+}
+.hero__title {
+  font-size: 60px;
+  line-height: 1.02;
+}
+.hero__lead {
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 460px;
+}
+.hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 8px;
+}
+.hero__media {
+  flex: 1 1 560px;
+  min-height: 420px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.hero__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.trust {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-top: 32px;
+}
+.trust__grid {
+  padding-top: 18px;
+  padding-bottom: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 24px;
+  font-size: 14px;
+}
+.trust__grid > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.trust__grid svg {
+  color: var(--bronze-dark);
+  flex: 0 0 auto;
+}
+
+.home-section {
+  padding: 48px 0 8px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.tile {
+  position: relative;
+  display: block;
+  height: 340px;
+  overflow: hidden;
+  text-decoration: none;
+}
+.tile img {
+  width: 100%;
+  height: 276px;
+  object-fit: cover;
+}
+.tile__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px;
+  background: var(--white);
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tile__name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+}
+.tile__cta {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bronze-dark);
+}
+
+.promos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+}
+.promo {
+  display: flex;
+  flex-wrap: wrap;
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--espresso);
+  min-height: 280px;
+}
+.promo__copy {
+  flex: 1 1 260px;
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+.promo__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 34px;
+  line-height: 1.05;
+}
+.promo__btn {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+.promo img {
+  flex: 1 1 200px;
+  min-height: 220px;
+  width: 100%;
+  object-fit: cover;
+}
+
+.quiz {
+  margin: 48px 0 8px;
+  border-color: var(--line-2);
+  padding: 22px 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.quiz > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 15px;
+}
+.quiz__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 28px;
+}
+
+.story {
+  border-top: 1px solid var(--line);
+}
+.story__grid {
+  padding-top: 40px;
+  padding-bottom: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  align-items: center;
+}
+.story__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.story__title,
+.home-nl__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+}
+.home-nl {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.home-nl__row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.home-nl__row .input {
+  flex: 1 1 220px;
+  width: auto;
+}
+
+@media (max-width: 640px) {
+  .hero__title {
+    font-size: 42px;
+  }
+  .hero__copy {
+    padding: 16px 0;
+  }
+  .hero__media {
+    min-height: 260px;
+  }
+  .promos {
+    grid-template-columns: 1fr;
+  }
+  .promo__copy {
+    padding: 24px;
+  }
+}

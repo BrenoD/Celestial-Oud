@@ -1,0 +1,16 @@
+.announce {
+  background: var(--espresso);
+  color: var(--white);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 9px var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 40px;
+}
+@media (max-width: 640px) {
+  .announce span:not(:first-child) {
+    display: none;
+  }
+}

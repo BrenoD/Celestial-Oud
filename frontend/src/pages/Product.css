@@ -1,0 +1,263 @@
+.pdp {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+.pdp__gallery {
+  flex: 1 1 520px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pdp__main {
+  height: 560px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--ivory);
+}
+.pdp__main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pdp__thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.pdp__thumbs button {
+  height: 96px;
+  padding: 0;
+  border: 1px solid var(--line-3);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--ivory);
+}
+.pdp__thumbs button[aria-pressed='true'] {
+  border: 2px solid var(--espresso);
+}
+.pdp__thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pdp__buy {
+  flex: 1 1 420px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pdp__title {
+  font-size: 48px;
+  line-height: 1;
+}
+.pdp__tagline {
+  font-size: 17px;
+  color: var(--muted);
+}
+.pdp__rating {
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pdp__price {
+  font-size: 30px;
+  font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.pdp__was {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--muted-2);
+}
+.pdp__sizes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pdp__size-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.option:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.pdp__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pdp__add {
+  flex: 1 1 220px;
+}
+.pdp__wish {
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--taupe);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--espresso);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdp__wish[aria-pressed='true'] {
+  color: var(--bronze-dark);
+  border-color: var(--bronze-dark);
+}
+.pdp__sample {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px dashed var(--star);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  background: transparent;
+  text-align: left;
+  color: var(--espresso);
+}
+.pdp__sample > span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 15px;
+}
+.pdp__sample .muted {
+  font-size: 13px;
+}
+.pdp__sample-cta {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bronze-dark);
+  white-space: nowrap;
+}
+.pdp__trust {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line-3);
+  border-bottom: 1px solid var(--line-3);
+}
+.pdp__trust li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.pdp__trust svg {
+  color: var(--bronze-dark);
+  flex: 0 0 auto;
+}
+
+.scent {
+  margin-top: 56px;
+  padding: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+}
+.scent__col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.scent h2 {
+  font-size: 32px;
+}
+.scent__tier {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.scent__notes {
+  font-size: 18px;
+}
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bar__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.bar__track {
+  height: 6px;
+  background: var(--line-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bar__fill {
+  height: 100%;
+  background: var(--bronze);
+  border-radius: 3px;
+}
+
+.reviews {
+  margin-top: 56px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  align-items: flex-start;
+}
+.reviews__summary {
+  flex: 0 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.reviews h2 {
+  font-size: 32px;
+}
+.reviews__score {
+  font-size: 44px;
+  font-weight: 600;
+}
+.reviews__list {
+  flex: 1 1 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.review {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.review__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .pdp__main {
+    height: 380px;
+  }
+  .pdp__title {
+    font-size: 38px;
+  }
+  .scent {
+    padding: 24px;
+  }
+}

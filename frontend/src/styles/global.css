@@ -1,0 +1,470 @@
+/* Celestial Oud design tokens — see handoff/HANDOFF.md "Brand".
+   Background is WHITE; brown and gold are accents only. */
+:root {
+  --white: #ffffff;
+  --ivory: #f7f3ec;
+  --ivory-2: #f2ede4;
+  --line: #ece6dd;
+  --line-2: #e4dacb;
+  --line-3: #ddd3c6;
+  --taupe: #b39c84;
+  --bronze: #b98a5a;
+  --bronze-light: #d9b07a;
+  --bronze-dark: #7a5530;
+  --star: #8a6236;
+  --espresso: #2e1d15;
+  --muted: #5a4334;
+  --muted-2: #6e5a48;
+  --warm-black: #0f0c0a;
+  --danger: #9b2c2c;
+  --success: #2f6b3a;
+
+  --font-ui: Jost, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-wordmark: Cinzel, Georgia, serif;
+
+  --container: 1320px;
+  --container-narrow: 1120px;
+  --gutter: 24px;
+  --radius: 4px;
+  --radius-lg: 6px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--white);
+  color: var(--espresso);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--espresso);
+}
+a:hover {
+  color: var(--bronze-dark);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+p {
+  margin: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--bronze-dark);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Layout helpers */
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+.container--narrow {
+  max-width: var(--container-narrow);
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bronze-dark);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.text-link {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* Buttons — primary: espresso/white. secondary (promo): bronze/espresso. outline. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn--primary {
+  background: var(--espresso);
+  color: var(--white);
+}
+.btn--primary:hover {
+  background: var(--warm-black);
+  color: var(--white);
+}
+.btn--secondary {
+  background: var(--bronze);
+  color: var(--espresso);
+}
+.btn--secondary:hover {
+  background: var(--bronze-light);
+  color: var(--espresso);
+}
+.btn--outline {
+  background: var(--white);
+  color: var(--espresso);
+  border: 1px solid var(--espresso);
+}
+.btn--outline:hover {
+  background: var(--ivory);
+  color: var(--espresso);
+}
+.btn--ghost {
+  background: transparent;
+  color: var(--muted);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  text-decoration: underline;
+  padding: 6px 0;
+  height: auto;
+}
+.btn--lg {
+  height: 52px;
+  font-size: 15px;
+  padding: 0 28px;
+}
+.btn--sm {
+  height: 42px;
+  font-size: 13px;
+  padding: 0 16px;
+  letter-spacing: 0.06em;
+}
+.btn--block {
+  width: 100%;
+}
+
+/* Form controls */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.input,
+.select,
+.textarea {
+  width: 100%;
+  height: 46px;
+  border: 1px solid var(--taupe);
+  background: var(--white);
+  color: var(--espresso);
+  padding: 0 14px;
+  font-size: 15px;
+  font-weight: 400;
+  border-radius: var(--radius);
+}
+.textarea {
+  height: auto;
+  padding: 12px 14px;
+  resize: vertical;
+}
+.input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.field__error {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--danger);
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  min-height: 32px;
+  font-weight: 400;
+}
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--espresso);
+  flex: 0 0 auto;
+}
+
+/* Cards / panels */
+.card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.panel {
+  background: var(--ivory);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+/* Section header */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.section-head h2 {
+  font-size: 36px;
+}
+.section-head__sub {
+  font-size: 14px;
+  color: var(--muted-2);
+  margin-top: 4px;
+}
+
+/* Product grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+.product-grid--dense {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  font-size: 13px;
+  color: var(--muted);
+  padding-bottom: 16px;
+}
+.breadcrumb a {
+  color: var(--muted);
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  background: var(--bronze);
+  color: var(--espresso);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 3px;
+}
+.badge--light {
+  background: var(--white);
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.pill {
+  display: inline-block;
+  border-radius: 14px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--taupe);
+  background: var(--white);
+}
+.pill--accent {
+  background: var(--ivory);
+  border-color: var(--bronze);
+}
+
+/* Stars */
+.stars {
+  color: var(--star);
+  letter-spacing: 2px;
+}
+
+/* Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, var(--ivory) 25%, var(--ivory-2) 50%, var(--ivory) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius);
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Status / toast */
+.status {
+  font-size: 14px;
+  background: var(--ivory);
+  padding: 10px 12px;
+  border-radius: var(--radius);
+}
+.status--error {
+  background: #fbeeee;
+  color: var(--danger);
+}
+
+.page {
+  padding: 18px var(--gutter) 56px;
+}
+.page-title {
+  font-size: 44px;
+}
+.page-intro {
+  margin-top: 6px;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+/* Toggle chip / option buttons (sizes, samples, delivery) */
+.option {
+  min-width: 84px;
+  height: 46px;
+  padding: 0 16px;
+  border: 1px solid var(--taupe);
+  background: transparent;
+  color: var(--espresso);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 500;
+}
+.option[aria-pressed='true'] {
+  border: 2px solid var(--espresso);
+  background: var(--espresso);
+  color: var(--white);
+  font-weight: 600;
+}
+.option--sm {
+  min-width: 0;
+  height: 42px;
+  font-size: 14px;
+  background: var(--white);
+}
+
+/* Quantity stepper */
+.qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--taupe);
+  border-radius: var(--radius);
+  height: 52px;
+}
+.qty button {
+  width: 44px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  color: var(--espresso);
+}
+.qty span {
+  width: 32px;
+  text-align: center;
+  font-weight: 600;
+}
+.qty--sm {
+  height: 44px;
+}
+.qty--sm button {
+  width: 40px;
+  font-size: 18px;
+}
+.qty--sm span {
+  width: 28px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: 16px;
+  }
+  .section-head h2 {
+    font-size: 30px;
+  }
+  .page-title {
+    font-size: 36px;
+  }
+}

@@ -1,0 +1,30 @@
+.cookie {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 50;
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--white);
+  border: 1px solid var(--line-3);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(15, 12, 10, 0.18);
+  padding: 18px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.cookie p {
+  flex: 1 1 320px;
+  color: var(--muted);
+}
+.cookie__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}

@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Celestial Oud — Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&amp;family=Cormorant+Garamond:wght@500;600&amp;family=Jost:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#2E1D15}a:hover{color:#7A5530}
+</style>
+</helmet>
+<div style="font-family: Jost, system-ui, sans-serif; color: #2E1D15; background: #FFFFFF; min-height: 100vh">
+
+<!-- 1. Announcement bar -->
+<div style="background: #2E1D15; color: #FFFFFF; font-size: 13px; letter-spacing: 0.04em; padding: 9px 24px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 40px">
+<span>Free UK delivery over £[XX]</span>
+<span>Order by 2pm — dispatched today</span>
+<span>Free sample with every order</span>
+</div>
+
+<!-- 2. Header -->
+<header style="background: #FFFFFF; color: #2E1D15; border-bottom: 1px solid #ECE6DD">
+<div style="max-width: 1320px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 32px">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #2E1D15">
+<img src="../assets/logo_dark.png" alt="Celestial Oud" style="width: 48px; height: 52px; object-fit: contain">
+<span style="display: flex; flex-direction: column; line-height: 1.1">
+<span style="font-family: Cinzel, serif; font-size: 22px; font-weight: 600; letter-spacing: 0.08em; color: #2E1D15">CELESTIAL OUD</span>
+<span style="font-family: 'Cormorant Garamond', serif; font-size: 15px; color: #7A5530">Fragrances</span>
+</span>
+</a>
+<form style="flex: 1 1 320px; display: flex; min-width: 0" role="search">
+<label for="q" style="position: absolute; left: -9999px">Search</label>
+<input id="q" type="search" placeholder="Search perfumes, notes (oud, amber, rose…)" style="flex: 1; min-width: 0; height: 44px; border: 1px solid #B39C84; border-right: 0; background: #FFFFFF; color: #2E1D15; padding: 0 14px; font-family: inherit; font-size: 15px; border-radius: 4px 0 0 4px">
+<a href="Colecao.dc.html" aria-label="Search" style="width: 52px; height: 44px; background: #2E1D15; color: #FFFFFF; border-radius: 0 4px 4px 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg></a>
+</form>
+<nav aria-label="Account" style="display: flex; align-items: center; gap: 6px">
+<a href="Conta.dc.html" aria-label="Account" style="color: #2E1D15; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg></a>
+<a href="Conta.dc.html" aria-label="Wishlist" style="color: #2E1D15; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg></a>
+<a href="Carrinho.dc.html" aria-label="Basket" style="color: #FFFFFF; height: 44px; padding: 0 14px; display: flex; align-items: center; gap: 8px; text-decoration: none; background: #2E1D15; border-radius: 4px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>
+<span style="font-size: 14px">Basket</span>
+<span style="min-width: 22px; height: 22px; border-radius: 11px; background: #B98A5A; color: #2E1D15; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">{{basket}}</span>
+</a>
+</nav>
+</div>
+<nav aria-label="Main" style="border-top: 1px solid #ECE6DD">
+<div style="max-width: 1320px; margin: 0 auto; padding: 0 24px; display: flex; flex-wrap: wrap; gap: 0 28px; font-size: 14px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase">
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none; padding: 13px 0">All Fragrances</a>
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none; padding: 13px 0">Bestsellers</a>
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none; padding: 13px 0">New In</a>
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none; padding: 13px 0">Oud</a>
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none; padding: 13px 0">Discovery Sets</a>
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none; padding: 13px 0">Gifts</a>
+<a href="Colecao.dc.html" style="color: #7A5530; text-decoration: none; padding: 13px 0; font-weight: 600">Offers</a>
+</div>
+</nav>
+</header>
+
+<!-- 3. Hero: direct -->
+<section style="background: #FFFFFF">
+<div style="max-width: 1320px; margin: 0 auto; padding: 24px 24px 0; display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch">
+<div style="flex: 1 1 420px; padding: 40px 0; display: flex; flex-direction: column; justify-content: center; gap: 18px">
+<span style="font-size: 13px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: #7A5530">Eau de Parfum · Long-lasting</span>
+<h1 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 60px; line-height: 1.02; color: #2E1D15">Rich oud perfumes.<br>Made to last all day.</h1>
+<p style="margin: 0; font-size: 18px; line-height: 1.5; color: #5A4334; max-width: 460px">Luxury oud, amber and musk fragrances — without the designer price tag.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; padding-top: 8px">
+<a href="Colecao.dc.html" style="background: #2E1D15; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; padding: 16px 28px; border-radius: 4px">Shop bestsellers</a>
+<a href="Colecao.dc.html" style="background: #B98A5A; color: #2E1D15; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; padding: 16px 26px; border-radius: 4px">Try 5 samples</a>
+</div>
+</div>
+<div style="flex: 1 1 560px; min-height: 420px; position: relative; border-radius: 8px; overflow: hidden">
+<img src="../assets/oud_brass.jpg" alt="Oud wood and the Celestial Oud emblem" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+</div>
+</div>
+</section>
+
+<!-- Trust strip -->
+<section aria-label="Why shop with us" style="background: #FFFFFF; border-top: 1px solid #ECE6DD; border-bottom: 1px solid #ECE6DD; margin-top: 32px">
+<div style="max-width: 1320px; margin: 0 auto; padding: 18px 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 24px; font-size: 14px">
+<div style="display: flex; align-items: center; gap: 10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A5530" stroke-width="1.6" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"></path><circle cx="7" cy="18" r="1.6"></circle><circle cx="17" cy="18" r="1.6"></circle></svg><span><b>Fast UK delivery</b> — next day available</span></div>
+<div style="display: flex; align-items: center; gap: 10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A5530" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path></svg><span><b>Long-lasting</b> — high concentration</span></div>
+<div style="display: flex; align-items: center; gap: 10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A5530" stroke-width="1.6" aria-hidden="true"><path d="M4 9h16v11H4zM2 6h20v3H2zM12 6v14"></path></svg><span><b>Free gift wrap</b> on request</span></div>
+<div style="display: flex; align-items: center; gap: 10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7A5530" stroke-width="1.6" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg><span><b>Secure checkout</b> — Apple Pay, PayPal</span></div>
+</div>
+</section>
+
+<main style="max-width: 1320px; margin: 0 auto; padding: 0 24px">
+
+<!-- 4. Collections -->
+<section style="padding: 56px 0 8px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px">
+<h2 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 36px">Shop by collection</h2>
+<a href="Colecao.dc.html" style="font-size: 14px; font-weight: 500; letter-spacing: 0.04em">View all</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+<a href="Colecao.dc.html" style="position: relative; display: block; height: 340px; border-radius: 6px; overflow: hidden; text-decoration: none; background: #FFFFFF; border: 1px solid #ECE6DD">
+<img src="../assets/wood.jpg" alt="" style="width: 100%; height: 276px; object-fit: cover; display: block">
+<span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px; background: #FFFFFF; color: #2E1D15; border-top: 1px solid #ECE6DD; display: flex; justify-content: space-between; align-items: center"><span style="font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600">Oud</span><span style="font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #7A5530">Shop</span></span>
+</a>
+<a href="Colecao.dc.html" style="position: relative; display: block; height: 340px; border-radius: 6px; overflow: hidden; text-decoration: none; background: #FFFFFF; border: 1px solid #ECE6DD">
+<img src="../assets/amber.jpg" alt="" style="width: 100%; height: 276px; object-fit: cover; display: block">
+<span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px; background: #FFFFFF; color: #2E1D15; border-top: 1px solid #ECE6DD; display: flex; justify-content: space-between; align-items: center"><span style="font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600">Amber &amp; Resins</span><span style="font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #7A5530">Shop</span></span>
+</a>
+<a href="Colecao.dc.html" style="position: relative; display: block; height: 340px; border-radius: 6px; overflow: hidden; text-decoration: none; background: #FFFFFF; border: 1px solid #ECE6DD">
+<img src="../assets/bottle.jpg" alt="" style="width: 100%; height: 276px; object-fit: cover; display: block">
+<span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px; background: #FFFFFF; color: #2E1D15; border-top: 1px solid #ECE6DD; display: flex; justify-content: space-between; align-items: center"><span style="font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600">Musk &amp; Florals</span><span style="font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #7A5530">Shop</span></span>
+</a>
+<a href="Colecao.dc.html" style="position: relative; display: block; height: 340px; border-radius: 6px; overflow: hidden; text-decoration: none; background: #FFFFFF; border: 1px solid #ECE6DD">
+<img src="../assets/box.jpg" alt="" style="width: 100%; height: 276px; object-fit: cover; display: block">
+<span style="position: absolute; left: 0; right: 0; bottom: 0; padding: 18px; background: #FFFFFF; color: #2E1D15; border-top: 1px solid #ECE6DD; display: flex; justify-content: space-between; align-items: center"><span style="font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600">Gift Sets</span><span style="font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #7A5530">Shop</span></span>
+</a>
+</div>
+</section>
+
+<!-- 5. Bestsellers -->
+<section style="padding: 48px 0 8px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px">
+<h2 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 36px">Bestsellers</h2>
+<a href="Colecao.dc.html" style="font-size: 14px; font-weight: 500; letter-spacing: 0.04em">View all bestsellers</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px">
+<sc-for list="{{bestsellers}}" as="p" hint-placeholder-count="4">
+<article style="background: #FFFFFF; border: 1px solid #ECE6DD; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column">
+<a href="Produto.dc.html" style="position: relative; display: block; height: 260px; background: #F7F3EC">
+<img src="{{p.img}}" alt="{{p.name}}" style="width: 100%; height: 276px; object-fit: cover; display: block">
+<span style="position: absolute; top: 12px; left: 12px; background: #B98A5A; color: #2E1D15; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 9px; border-radius: 3px">{{p.badge}}</span>
+</a>
+<div style="padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1">
+<a href="Produto.dc.html" style="text-decoration: none; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: #2E1D15">{{p.name}}</a>
+<span style="font-size: 13px; color: #6E5A48">{{p.notes}}</span>
+<span style="font-size: 13px; color: #6E5A48"><span style="color: #8A6236; letter-spacing: 2px" aria-label="Rated 5 out of 5">★★★★★</span> ([XX] reviews)</span>
+<span style="font-size: 18px; font-weight: 600; padding-top: 4px">From £[XX]</span>
+<button type="button" onClick="{{p.add}}" style="margin-top: auto; height: 46px; border: 0; border-radius: 4px; background: #2E1D15; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer">Add to basket</button>
+</div>
+</article>
+</sc-for>
+</div>
+</section>
+
+<!-- 6. Promo banners -->
+<section style="padding: 48px 0 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px">
+<a href="Colecao.dc.html" style="display: flex; flex-wrap: wrap; background: #F7F3EC; color: #2E1D15; border-radius: 6px; overflow: hidden; text-decoration: none; min-height: 280px">
+<div style="flex: 1 1 260px; padding: 36px; display: flex; flex-direction: column; justify-content: center; gap: 12px">
+<span style="font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: #7A5530">Not sure yet?</span>
+<span style="font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 34px; line-height: 1.05">Discovery Set<br>5 × 2ml samples</span>
+<span style="font-size: 15px; color: #5A4334">Get the cost back as credit on your first full bottle.</span>
+<span style="align-self: flex-start; margin-top: 8px; background: #B98A5A; color: #2E1D15; font-weight: 600; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; padding: 13px 22px; border-radius: 4px">Shop the set</span>
+</div>
+<img src="../assets/bottle.jpg" alt="" style="flex: 1 1 200px; min-height: 220px; width: 100%; object-fit: cover">
+</a>
+<a href="Colecao.dc.html" style="display: flex; flex-wrap: wrap; background: #F7F3EC; color: #2E1D15; border-radius: 6px; overflow: hidden; text-decoration: none; min-height: 280px">
+<div style="flex: 1 1 260px; padding: 36px; display: flex; flex-direction: column; justify-content: center; gap: 12px">
+<span style="font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: #7A5530">Christmas gifting</span>
+<span style="font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 34px; line-height: 1.05">Gift sets,<br>ready to give</span>
+<span style="font-size: 15px; color: #5A4334">Boxed, wrapped and dispatched today.</span>
+<span style="align-self: flex-start; margin-top: 8px; background: #2E1D15; color: #2E1D15; font-weight: 600; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; padding: 13px 22px; border-radius: 4px">Shop gifts</span>
+</div>
+<img src="../assets/box.jpg" alt="" style="flex: 1 1 200px; min-height: 220px; width: 100%; object-fit: cover">
+</a>
+</section>
+
+<!-- 7. Small theme: quiz strip -->
+<section style="margin: 48px 0 8px; background: #F7F3EC; border: 1px solid #E4DACB; border-radius: 6px; padding: 22px 28px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 28px; color: #2E1D15">Find your scent in 60 seconds</span>
+<span style="font-size: 15px; color: #2E1D15">Answer 5 quick questions and get your perfect match.</span>
+</div>
+<a href="Colecao.dc.html" style="background: #2E1D15; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; padding: 14px 24px; border-radius: 4px">Take the quiz</a>
+</section>
+
+<!-- 8. Top rated -->
+<section style="padding: 48px 0 56px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 36px">Top rated</h2>
+<span style="font-size: 14px; color: #6E5A48">Our highest-rated fragrances, chosen by customers.</span>
+</div>
+<a href="Colecao.dc.html" style="font-size: 14px; font-weight: 500; letter-spacing: 0.04em">See all top rated</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px">
+<sc-for list="{{toprated}}" as="p" hint-placeholder-count="4">
+<article style="background: #FFFFFF; border: 1px solid #ECE6DD; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column">
+<a href="Produto.dc.html" style="position: relative; display: block; height: 260px; background: #F7F3EC">
+<img src="{{p.img}}" alt="{{p.name}}" style="width: 100%; height: 276px; object-fit: cover; display: block">
+<span style="position: absolute; top: 12px; left: 12px; background: #FFFFFF; color: #2E1D15; font-size: 12px; font-weight: 600; padding: 5px 9px; border-radius: 3px"><span style="color: #8A6236">★</span> [X.X] rating</span>
+</a>
+<div style="padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1">
+<a href="Produto.dc.html" style="text-decoration: none; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: #2E1D15">{{p.name}}</a>
+<span style="font-size: 13px; color: #6E5A48">{{p.notes}}</span>
+<span style="font-size: 13px; color: #6E5A48"><span style="color: #8A6236; letter-spacing: 2px" aria-label="Rated 5 out of 5">★★★★★</span> ([XX] reviews)</span>
+<span style="font-size: 18px; font-weight: 600; padding-top: 4px">From £[XX]</span>
+<button type="button" onClick="{{p.add}}" style="margin-top: auto; height: 46px; border: 0; border-radius: 4px; background: #2E1D15; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer">Add to basket</button>
+</div>
+</article>
+</sc-for>
+</div>
+</section>
+</main>
+
+<!-- 9. Third plane: story + newsletter -->
+<section style="background: #FFFFFF; border-top: 1px solid #ECE6DD">
+<div style="max-width: 1320px; margin: 0 auto; padding: 40px 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; align-items: center">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 24px">Our story</span>
+<span style="font-size: 15px; color: #5A4334; line-height: 1.5">[One or two lines about Celestial Oud — who makes it and why.]</span>
+<a href="Sobre.dc.html" style="font-size: 14px; font-weight: 500">Read more</a>
+</div>
+<form style="display: flex; flex-direction: column; gap: 10px">
+<label for="nl" style="font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 24px">Get 10% off your first order</label>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<input id="nl" type="email" placeholder="Your email address" style="flex: 1 1 220px; height: 46px; border: 1px solid #B39C84; background: #FFFFFF; padding: 0 14px; font-family: inherit; font-size: 15px; border-radius: 4px; color: #2E1D15">
+<button type="submit" style="height: 46px; padding: 0 22px; border: 0; background: #2E1D15; color: #FFFFFF; font-family: inherit; font-weight: 600; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 4px; cursor: pointer">Sign up</button>
+</div>
+</form>
+</div>
+</section>
+
+<!-- 10. Footer -->
+<footer style="background: #F7F3EC; color: #2E1D15; border-top: 1px solid #E4DACB; font-size: 14px">
+<div style="max-width: 1320px; margin: 0 auto; padding: 48px 24px 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: Cinzel, serif; font-size: 18px; font-weight: 600; letter-spacing: 0.08em; color: #2E1D15">CELESTIAL OUD</span>
+<span style="color: #5A4334; line-height: 1.5">Oud, amber and musk fragrances.</span>
+</div>
+<nav aria-label="Shop" style="display: flex; flex-direction: column; gap: 8px">
+<span style="color: #2E1D15; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; font-size: 12px">Shop</span>
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none">All fragrances</a>
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none">Bestsellers</a>
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none">Discovery sets</a>
+<a href="Colecao.dc.html" style="color: #2E1D15; text-decoration: none">Gift cards</a>
+</nav>
+<nav aria-label="Help" style="display: flex; flex-direction: column; gap: 8px">
+<span style="color: #2E1D15; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; font-size: 12px">Help</span>
+<a href="Ajuda.dc.html" style="color: #2E1D15; text-decoration: none">Track my order</a>
+<a href="Ajuda.dc.html" style="color: #2E1D15; text-decoration: none">Delivery</a>
+<a href="Ajuda.dc.html" style="color: #2E1D15; text-decoration: none">Returns</a>
+<a href="Ajuda.dc.html" style="color: #2E1D15; text-decoration: none">FAQs</a>
+<a href="Ajuda.dc.html" style="color: #2E1D15; text-decoration: none">Contact us</a>
+</nav>
+<nav aria-label="About" style="display: flex; flex-direction: column; gap: 8px">
+<span style="color: #2E1D15; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; font-size: 12px">About</span>
+<a href="Sobre.dc.html" style="color: #2E1D15; text-decoration: none">Our story</a>
+<a href="Sobre.dc.html" style="color: #2E1D15; text-decoration: none">What is oud?</a>
+<a href="Sobre.dc.html" style="color: #2E1D15; text-decoration: none">Fragrance guide</a>
+<a href="Ajuda.dc.html" style="color: #2E1D15; text-decoration: none">Wholesale</a>
+</nav>
+</div>
+<div style="max-width: 1320px; margin: 0 auto; padding: 18px 24px 28px; border-top: 1px solid #E4DACB; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 12px; color: #5A4334">
+<span>© Celestial Oud [Ltd] · Company no. [XXXXXXXX] · [Registered address]</span>
+<span style="display: flex; flex-wrap: wrap; gap: 16px">
+<a href="Ajuda.dc.html" style="color: #5A4334">Terms</a>
+<a href="Ajuda.dc.html" style="color: #5A4334">Privacy</a>
+<a href="Ajuda.dc.html" style="color: #5A4334">Cookies</a>
+<a href="Ajuda.dc.html" style="color: #5A4334">Accessibility</a>
+</span>
+<span>Visa · Mastercard · Amex · Apple Pay · Google Pay · PayPal · Klarna</span>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3900}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { basket: 0 }; }
+  renderVals() {
+    const add = () => this.setState({ basket: this.state.basket + 1 });
+    const bottle = '../assets/bottle.jpg';
+    const box = '../assets/box.jpg';
+    const best = [
+      { name: 'Royal Oud', notes: 'Oud · Saffron · Rose', badge: 'Bestseller', img: bottle },
+      { name: 'Amber Noir', notes: 'Amber · Vanilla · Smoke', badge: 'Bestseller', img: bottle },
+      { name: 'Celestial Musk', notes: 'White musk · Iris · Cedar', badge: 'Trending', img: bottle },
+      { name: 'Oud Gift Set', notes: '50ml + body oil, boxed', badge: 'Gift', img: box }
+    ];
+    const top = [
+      { name: 'Saffron Night', notes: 'Saffron · Leather · Oud', img: bottle },
+      { name: 'Rose Oud', notes: 'Rose · Oud · Patchouli', img: bottle },
+      { name: 'Golden Sandal', notes: 'Sandalwood · Amber · Musk', img: bottle },
+      { name: 'Discovery Set', notes: '5 × 2ml samples', img: box }
+    ];
+    return {
+      basket: this.state.basket,
+      bestsellers: best.map((p) => ({ ...p, add })),
+      toprated: top.map((p) => ({ ...p, add }))
+    };
+  }
+}
+</script>
+</body>
+</html>
