@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import type { ProductSummary } from '@/types';
 import { formatPenceShort } from '@/lib/money';
-import { assetUrl } from '@/config';
 import { Stars } from './Stars';
+import { ProductImage } from './ProductImage';
 import './ProductCard.css';
 
 interface Props {
@@ -17,7 +17,7 @@ export function ProductCard({ product: p, badgeStyle = 'tag', compact = false }:
   return (
     <article className={`pcard card${compact ? ' pcard--compact' : ''}`}>
       <Link to={href} className="pcard__media" aria-label={p.name}>
-        <img src={assetUrl(p.images[0])} alt="" loading="lazy" decoding="async" width={400} height={276} />
+        <ProductImage src={p.images[0]} width={400} height={276} />
         {badgeStyle === 'rating' ? (
           <span className="badge badge--light pcard__badge">
             <span style={{ color: 'var(--star)' }}>★</span> {p.rating.toFixed(1)} rating

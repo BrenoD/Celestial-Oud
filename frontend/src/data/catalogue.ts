@@ -6,6 +6,8 @@
  */
 import type { Collection, DeliveryMethod, Faq, Product, Review } from '@/types';
 
+// Collection tile crops from the moodboard. Products have NO images until
+// real photography exists — the UI shows a neutral placeholder.
 const bottle = '/images/bottle.jpg';
 const box = '/images/box.jpg';
 const amber = '/images/amber.jpg';
@@ -50,7 +52,7 @@ export const products: Product[] = [
     wear: ['evening', 'winter'],
     rating: 4.8,
     reviewCount: 124,
-    images: [bottle, box, amber, wood],
+    images: [],
     sizes: sizes('royal-oud', 3500, 5500, 8500),
     samplePrice: 400,
     pyramid: { top: ['Saffron', 'Bergamot'], heart: ['Damask rose', 'Incense'], base: ['Oud', 'Amber', 'Musk'] },
@@ -74,7 +76,7 @@ export const products: Product[] = [
     wear: ['evening', 'winter'],
     rating: 4.7,
     reviewCount: 98,
-    images: [bottle, amber],
+    images: [],
     sizes: sizes('amber-noir', 3200, 5000, 7800),
     samplePrice: 400,
     pyramid: { top: ['Pink pepper', 'Cardamom'], heart: ['Labdanum', 'Benzoin'], base: ['Amber', 'Vanilla', 'Birch tar'] },
@@ -97,7 +99,7 @@ export const products: Product[] = [
     wear: ['day', 'summer'],
     rating: 4.6,
     reviewCount: 41,
-    images: [bottle],
+    images: [],
     sizes: sizes('celestial-musk', 3000, 4800, 7500),
     samplePrice: 400,
     pyramid: { top: ['Bergamot', 'Aldehydes'], heart: ['Iris', 'Violet leaf'], base: ['White musk', 'Cedar'] },
@@ -119,7 +121,7 @@ export const products: Product[] = [
     wear: ['evening', 'winter'],
     rating: 4.9,
     reviewCount: 67,
-    images: [bottle, wood],
+    images: [],
     sizes: sizes('saffron-night', 3600, 5800, 8900),
     samplePrice: 450,
     pyramid: { top: ['Saffron', 'Nutmeg'], heart: ['Leather', 'Rose'], base: ['Oud', 'Vetiver'] },
@@ -141,7 +143,7 @@ export const products: Product[] = [
     wear: ['evening', 'day'],
     rating: 4.7,
     reviewCount: 83,
-    images: [bottle, amber],
+    images: [],
     sizes: sizes('rose-oud', 3400, 5400, 8400),
     samplePrice: 400,
     pyramid: { top: ['Turkish rose', 'Pink pepper'], heart: ['Damask rose', 'Geranium'], base: ['Oud', 'Patchouli'] },
@@ -163,7 +165,7 @@ export const products: Product[] = [
     wear: ['day', 'winter'],
     rating: 4.6,
     reviewCount: 52,
-    images: [bottle, wood],
+    images: [],
     sizes: sizes('golden-sandal', 3200, 5000, 7800),
     samplePrice: 400,
     pyramid: { top: ['Cardamom'], heart: ['Sandalwood', 'Iris'], base: ['Amber', 'Musk', 'Tonka'] },
@@ -185,7 +187,7 @@ export const products: Product[] = [
     wear: ['evening', 'winter'],
     rating: 4.5,
     reviewCount: 36,
-    images: [bottle, amber],
+    images: [],
     sizes: [
       { sku: 'velvet-vanilla-30ml', label: '30ml', ml: 30, price: 2700, compareAtPrice: 3200, inStock: true },
       { sku: 'velvet-vanilla-50ml', label: '50ml', ml: 50, price: 4200, compareAtPrice: 5000, inStock: true },
@@ -212,7 +214,7 @@ export const products: Product[] = [
     wear: ['day', 'evening'],
     rating: 4.9,
     reviewCount: 210,
-    images: [box, bottle],
+    images: [],
     sizes: [{ sku: 'discovery-set', label: '5 × 2ml', ml: 10, price: 1500, inStock: true }],
     pyramid: { top: ['Royal Oud', 'Amber Noir'], heart: ['Celestial Musk', 'Rose Oud'], base: ['Saffron Night'] },
     profile: { intensity: 70, longevity: 75, sweetness: 50, freshness: 40 },
@@ -235,7 +237,7 @@ export const products: Product[] = [
     wear: ['evening', 'winter'],
     rating: 4.8,
     reviewCount: 29,
-    images: [box, bottle],
+    images: [],
     sizes: [{ sku: 'oud-gift-set', label: 'Gift box', ml: 50, price: 7500, inStock: true }],
     pyramid: { top: ['Saffron', 'Bergamot'], heart: ['Damask rose', 'Incense'], base: ['Oud', 'Amber', 'Musk'] },
     profile: { intensity: 85, longevity: 80, sweetness: 45, freshness: 20 },

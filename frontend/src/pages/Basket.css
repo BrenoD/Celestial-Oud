@@ -50,12 +50,24 @@
   padding: 16px;
   align-items: center;
 }
+.line__img,
 .line img {
+  display: block;
   width: 110px;
   height: 110px;
   object-fit: cover;
   border-radius: var(--radius);
   background: var(--ivory);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.summary__thumb {
+  display: block;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex: 0 0 auto;
 }
 .line__info {
   flex: 1 1 200px;

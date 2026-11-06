@@ -39,11 +39,15 @@
   align-items: center;
   font-size: 15px;
 }
+.confirm__thumb,
 .confirm__line img {
+  display: block;
   width: 64px;
   height: 64px;
   object-fit: cover;
   border-radius: var(--radius);
+  overflow: hidden;
+  flex: 0 0 auto;
 }
 .confirm__line > span:nth-child(2) {
   flex: 1;

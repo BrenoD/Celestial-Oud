@@ -10,7 +10,8 @@ import { Stars } from '@/components/ui/Stars';
 import { Seo } from '@/components/ui/Seo';
 import { GiftIcon, HeartIcon, ReturnIcon, TruckIcon } from '@/components/ui/Icons';
 import { formatPence, formatPenceShort } from '@/lib/money';
-import { assetUrl, config } from '@/config';
+import { config } from '@/config';
+import { ProductImage } from '@/components/ui/ProductImage';
 import NotFound from './NotFound';
 import './Product.css';
 
@@ -79,13 +80,13 @@ export default function Product() {
       <section className="pdp">
         <div className="pdp__gallery">
           <div className="pdp__main">
-            <img src={assetUrl(p.images[photo] ?? p.images[0])} alt={`${p.name} bottle`} width={492} height={560} fetchPriority="high" />
+            <ProductImage src={p.images[photo] ?? p.images[0]} alt={`${p.name} bottle`} width={492} height={560} loading="eager" fetchPriority="high" />
           </div>
           {p.images.length > 1 && (
             <div className="pdp__thumbs">
               {p.images.map((img, i) => (
                 <button key={img + i} type="button" aria-label={`Photo ${i + 1}`} aria-pressed={photo === i} onClick={() => setPhoto(i)}>
-                  <img src={assetUrl(img)} alt="" loading="lazy" width={120} height={96} />
+                  <ProductImage src={img} width={120} height={96} className="pimg--mini" />
                 </button>
               ))}
             </div>

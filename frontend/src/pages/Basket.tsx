@@ -5,7 +5,8 @@ import { useValidateDiscount } from '@/api/hooks';
 import { Qty } from '@/components/ui/Qty';
 import { Seo } from '@/components/ui/Seo';
 import { formatPence, formatPenceShort } from '@/lib/money';
-import { assetUrl, config } from '@/config';
+import { config } from '@/config';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { freeSamples } from '@/data/catalogue';
 import './Basket.css';
 
@@ -73,7 +74,9 @@ export default function Basket() {
           ) : (
             s.lines.map((l) => (
               <div key={l.sku} className="card line">
-                <img src={assetUrl(l.image)} alt="" width={110} height={110} loading="lazy" />
+                <span className="line__img">
+                  <ProductImage src={l.image} width={110} height={110} className="pimg--mini" />
+                </span>
                 <div className="line__info">
                   <Link to={`/products/${l.slug}`} className="line__name">
                     {l.name}

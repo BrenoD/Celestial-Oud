@@ -1,0 +1,27 @@
+.pimg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  background: var(--ivory);
+  color: var(--taupe);
+  border-radius: inherit;
+}
+.pimg svg {
+  width: 28%;
+  max-width: 64px;
+  min-width: 18px;
+  height: auto;
+}
+.pimg__text {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+.pimg--mini .pimg__text {
+  display: none;
+}

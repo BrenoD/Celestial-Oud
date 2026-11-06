@@ -5,7 +5,8 @@ import { selectSubtotal, useBasketStore } from '@/store/basket';
 import { useAuthStore } from '@/store/auth';
 import { Seo } from '@/components/ui/Seo';
 import { formatPence } from '@/lib/money';
-import { assetUrl, config } from '@/config';
+import { config } from '@/config';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { freeSamples } from '@/data/catalogue';
 import type { Address } from '@/types';
 import './Checkout.css';
@@ -327,7 +328,9 @@ export default function Checkout() {
           </span>
           {basket.lines.map((l) => (
             <div key={l.sku} className="summary__item">
-              <img src={assetUrl(l.image)} alt="" width={64} height={64} />
+              <span className="summary__thumb">
+                <ProductImage src={l.image} width={64} height={64} className="pimg--mini" />
+              </span>
               <span>
                 <b>{l.name}</b>
                 <br />

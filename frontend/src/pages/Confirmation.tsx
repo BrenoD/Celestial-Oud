@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/auth';
 import { Seo } from '@/components/ui/Seo';
 import { CheckIcon } from '@/components/ui/Icons';
 import { formatPence } from '@/lib/money';
-import { assetUrl } from '@/config';
+import { ProductImage } from '@/components/ui/ProductImage';
 import type { Order } from '@/types';
 import './Confirmation.css';
 
@@ -50,7 +50,9 @@ export default function Confirmation() {
       <div className="card confirm__box">
         {order.lines.map((l) => (
           <div key={l.sku} className="confirm__line">
-            <img src={assetUrl(l.image)} alt="" width={64} height={64} />
+            <span className="confirm__thumb">
+              <ProductImage src={l.image} width={64} height={64} className="pimg--mini" />
+            </span>
             <span>
               <b>{l.name}</b> · {l.variantLabel} × {l.qty}
             </span>
