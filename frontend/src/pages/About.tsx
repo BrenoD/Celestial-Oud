@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Seo } from '@/components/ui/Seo';
-import { assetUrl } from '@/config';
+import { BrandPanel } from '@/components/ui/BrandPanel';
 import './About.css';
 
 export default function About() {
@@ -22,28 +22,34 @@ export default function About() {
             </p>
           </div>
           <div className="about-hero__media">
-            <img src={assetUrl('/images/oud_brass.jpg')} alt="Oud wood" width={572} height={517} />
+            <BrandPanel size="lg" label="Imagery coming soon" />
           </div>
         </div>
       </section>
 
       <section className="container about-cards">
         <article id="oud" className="card about-card">
-          <img src={assetUrl('/images/wood.jpg')} alt="" loading="lazy" width={300} height={200} />
+          <div className="about-card__media">
+            <BrandPanel size="sm" />
+          </div>
           <div>
             <span className="about-card__title">What is oud?</span>
             <span className="muted">Oud comes from agarwood — a dark, resinous wood prized for centuries across the Middle East and Asia.</span>
           </div>
         </article>
         <article id="guide" className="card about-card">
-          <img src={assetUrl('/images/amber.jpg')} alt="" loading="lazy" width={300} height={200} />
+          <div className="about-card__media">
+            <BrandPanel size="sm" />
+          </div>
           <div>
             <span className="about-card__title">Made to last</span>
             <span className="muted">[How the fragrances are blended and why they last.]</span>
           </div>
         </article>
         <article className="card about-card">
-          <img src={assetUrl('/images/box.jpg')} alt="" loading="lazy" width={300} height={200} />
+          <div className="about-card__media">
+            <BrandPanel size="sm" />
+          </div>
           <div>
             <span className="about-card__title">Luxury, fairly priced</span>
             <span className="muted">[Why the prices are what they are — no designer mark-up.]</span>

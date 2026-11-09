@@ -15,11 +15,11 @@ reject — **Real**), "added to basket" toast.
 ## 1. Home — `/`  (`pages/Home.tsx`)
 | Block | Content | Status |
 |---|---|---|
-| Hero | "Rich oud perfumes. Made to last all day." + sub-line; CTAs *Shop bestsellers* → `/collections/bestsellers`, *Try 5 samples* → `/products/discovery-set`; moodboard image `oud_brass.jpg` | Copy real · image moodboard crop |
+| Hero | "Rich oud perfumes. Made to last all day." + sub-line; CTAs *Shop bestsellers* → `/collections/bestsellers`, *Try 5 samples* → `/products/discovery-set`; brand panel in place of imagery | Copy real · awaiting photography |
 | Trust strip | Fast UK delivery · Long-lasting · Free gift wrap · Secure checkout | Real |
-| Shop by collection | 4 tiles: Oud, Amber & Resins, Musk & Florals, Gift Sets (moodboard crops) | Real links · images moodboard |
+| Shop by collection | 4 tiles: Oud, Amber & Resins, Musk & Florals, Gift Sets (brand panel, no photo) | Real links · awaiting photography |
 | Bestsellers | 4 products from API `collection=bestsellers` | Data placeholder |
-| Promo banners | Discovery Set (credit-back model) · Christmas gift sets | Copy real (seasonal) |
+| Promo banners | Discovery Set (credit-back model) · Christmas gift sets — copy only, no image | Copy real (seasonal) |
 | Quiz strip | "Find your scent in 60 seconds" → `/quiz` | Real |
 | Top rated | 4 products `collection=top-rated&sort=top-rated`, rating badge | Data placeholder |
 | Story + newsletter | Story blurb **[Placeholder]**; newsletter "Get 10% off" posts to `/v1/newsletter` | Form real · copy placeholder |
@@ -116,7 +116,7 @@ Saved products (localStorage), product cards + Remove, empty state. **Real** (de
 | Contact (`#contact`) | Email hello@celestialoud.co.uk, WhatsApp **[number]**, hours; form name/email/order/message → `/v1/contact` | Form real · details placeholder |
 
 ## 12. About / Our story — `/about`  (`pages/About.tsx`)
-Hero headline + story paragraph **[Placeholder]** with moodboard image; three cards — *What is oud?* (real,
+Hero headline + story paragraph **[Placeholder]** with brand panel (no photo); three cards — *What is oud?* (real,
 `#oud`), *Made to last* **[Placeholder]** (`#guide`), *Luxury, fairly priced* **[Placeholder]**; CTA band
 *Shop all* / *Try samples*.
 
@@ -129,6 +129,9 @@ CPSR / SCPN) with **[Placeholder]** company details and full policy text. "Last 
 "We can't find that page" + *Back to home* / *Shop bestsellers*. **Real**. Also used for unknown product/legal slugs.
 
 ---
+
+## Imagery
+No photography is used anywhere in the storefront: products show a "Photo coming soon" block and hero / collection tiles / about cards show an ivory brand panel with the emblem. Only `logo_dark.png` ships in `public/images`. The moodboard crops remain in `handoff/assets` for reference.
 
 ## Catalogue currently in the mock (`src/data/catalogue.ts`)
 9 products — Royal Oud, Amber Noir, Celestial Musk, Saffron Night, Rose Oud, Golden Sandal, Velvet Vanilla

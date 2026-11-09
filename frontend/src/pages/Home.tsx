@@ -4,14 +4,14 @@ import { useNewsletter, useProducts } from '@/api/hooks';
 import { ProductCard, ProductCardSkeleton } from '@/components/ui/ProductCard';
 import { ClockIcon, GiftIcon, LockIcon, TruckIcon } from '@/components/ui/Icons';
 import { Seo } from '@/components/ui/Seo';
-import { assetUrl } from '@/config';
+import { BrandPanel } from '@/components/ui/BrandPanel';
 import './Home.css';
 
 const COLLECTION_TILES = [
-  { slug: 'oud', name: 'Oud', image: '/images/wood.jpg' },
-  { slug: 'amber', name: 'Amber & Resins', image: '/images/amber.jpg' },
-  { slug: 'musk', name: 'Musk & Florals', image: '/images/bottle.jpg' },
-  { slug: 'gifts', name: 'Gift Sets', image: '/images/box.jpg' },
+  { slug: 'oud', name: 'Oud' },
+  { slug: 'amber', name: 'Amber & Resins' },
+  { slug: 'musk', name: 'Musk & Florals' },
+  { slug: 'gifts', name: 'Gift Sets' },
 ];
 
 function Grid({ query, badgeStyle }: { query: Parameters<typeof useProducts>[0]; badgeStyle?: 'tag' | 'rating' }) {
@@ -80,7 +80,7 @@ export default function Home() {
           </div>
         </div>
         <div className="hero__media">
-          <img src={assetUrl('/images/oud_brass.jpg')} alt="Oud wood and the Celestial Oud emblem" fetchPriority="high" width={572} height={517} />
+          <BrandPanel size="lg" label="Imagery coming soon" />
         </div>
       </section>
 
@@ -126,7 +126,9 @@ export default function Home() {
           <div className="tiles">
             {COLLECTION_TILES.map((c) => (
               <Link key={c.slug} to={`/collections/${c.slug}`} className="tile card">
-                <img src={assetUrl(c.image)} alt="" loading="lazy" width={300} height={276} />
+                <div className="tile__media">
+                  <BrandPanel />
+                </div>
                 <span className="tile__bar">
                   <span className="tile__name">{c.name}</span>
                   <span className="tile__cta">Shop</span>
@@ -159,7 +161,6 @@ export default function Home() {
               <span className="muted">Get the cost back as credit on your first full bottle.</span>
               <span className="btn btn--secondary promo__btn">Shop the set</span>
             </div>
-            <img src={assetUrl('/images/bottle.jpg')} alt="" loading="lazy" width={492} height={382} />
           </Link>
           <Link to="/collections/gifts" className="promo panel">
             <div className="promo__copy">
@@ -172,7 +173,6 @@ export default function Home() {
               <span className="muted">Boxed, wrapped and dispatched today.</span>
               <span className="btn btn--primary promo__btn">Shop gifts</span>
             </div>
-            <img src={assetUrl('/images/box.jpg')} alt="" loading="lazy" width={625} height={391} />
           </Link>
         </section>
 

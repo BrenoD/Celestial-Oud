@@ -6,12 +6,8 @@
  */
 import type { Collection, DeliveryMethod, Faq, Product, Review } from '@/types';
 
-// Collection tile crops from the moodboard. Products have NO images until
-// real photography exists — the UI shows a neutral placeholder.
-const bottle = '/images/bottle.jpg';
-const box = '/images/box.jpg';
-const amber = '/images/amber.jpg';
-const wood = '/images/wood.jpg';
+// No imagery yet: products and collections render a neutral placeholder
+// until real photography exists.
 
 const sizes = (slug: string, p30: number, p50: number, p100: number) => [
   { sku: `${slug}-30ml`, label: '30ml', ml: 30, price: p30, inStock: true },
@@ -30,11 +26,11 @@ export const collections: Collection[] = [
   { slug: 'all', name: 'All Fragrances', description: 'Long-lasting oud, amber and musk perfumes.' },
   { slug: 'bestsellers', name: 'Bestsellers', description: 'Our most-loved fragrances.' },
   { slug: 'new-in', name: 'New In', description: 'The latest additions to the collection.' },
-  { slug: 'oud', name: 'Oud', description: 'Rich, smoky agarwood at the heart of every blend.', image: wood },
-  { slug: 'amber', name: 'Amber & Resins', description: 'Warm amber, labdanum and benzoin.', image: amber },
-  { slug: 'musk', name: 'Musk & Florals', description: 'Clean musks and soft florals.', image: bottle },
-  { slug: 'discovery-sets', name: 'Discovery Sets', description: 'Try before you commit to a full bottle.', image: box },
-  { slug: 'gifts', name: 'Gift Sets', description: 'Boxed, wrapped and dispatched today.', image: box },
+  { slug: 'oud', name: 'Oud', description: 'Rich, smoky agarwood at the heart of every blend.' },
+  { slug: 'amber', name: 'Amber & Resins', description: 'Warm amber, labdanum and benzoin.' },
+  { slug: 'musk', name: 'Musk & Florals', description: 'Clean musks and soft florals.' },
+  { slug: 'discovery-sets', name: 'Discovery Sets', description: 'Try before you commit to a full bottle.' },
+  { slug: 'gifts', name: 'Gift Sets', description: 'Boxed, wrapped and dispatched today.' },
   { slug: 'offers', name: 'Offers', description: 'Limited-time prices.' },
 ];
 

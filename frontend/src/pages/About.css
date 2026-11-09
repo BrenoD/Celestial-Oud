@@ -25,12 +25,9 @@
   border-radius: 8px;
   overflow: hidden;
 }
-.about-hero__media img {
+.about-hero__media > * {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 .about-cards {
   padding-top: 56px;
@@ -42,10 +39,9 @@
 .about-card {
   overflow: hidden;
 }
-.about-card img {
+.about-card__media {
   width: 100%;
-  height: 200px;
-  object-fit: cover;
+  height: 160px;
 }
 .about-card > div {
   padding: 20px;
