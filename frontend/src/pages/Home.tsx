@@ -115,9 +115,9 @@ export default function Home() {
       </section>
 
       <main className="container">
-        {/* Collections */}
-        <section className="home-section" style={{ paddingTop: 56 }}>
-          <div className="section-head">
+        {/* Collections: compact navigation row */}
+        <section className="home-section" style={{ paddingTop: 40 }}>
+          <div className="section-head section-head--compact">
             <h2>Shop by collection</h2>
             <Link to="/collections/all" className="text-link">
               View all
@@ -126,12 +126,12 @@ export default function Home() {
           <div className="tiles">
             {COLLECTION_TILES.map((c) => (
               <Link key={c.slug} to={`/collections/${c.slug}`} className="tile card">
-                <div className="tile__media">
-                  <BrandPanel />
-                </div>
-                <span className="tile__bar">
-                  <span className="tile__name">{c.name}</span>
-                  <span className="tile__cta">Shop</span>
+                <span className="tile__media">
+                  <BrandPanel size="sm" />
+                </span>
+                <span className="tile__name">{c.name}</span>
+                <span className="tile__cta" aria-hidden="true">
+                  →
                 </span>
               </Link>
             ))}
@@ -147,6 +147,20 @@ export default function Home() {
             </Link>
           </div>
           <Grid query={{ collection: 'bestsellers', pageSize: 4 }} />
+        </section>
+
+        {/* Top rated: the main showcase */}
+        <section className="home-section">
+          <div className="section-head">
+            <div>
+              <h2>Top rated</h2>
+              <p className="section-head__sub">Our highest-rated fragrances, chosen by customers.</p>
+            </div>
+            <Link to="/collections/top-rated" className="text-link">
+              See all top rated
+            </Link>
+          </div>
+          <Grid query={{ collection: 'top-rated', sort: 'top-rated', pageSize: 8 }} badgeStyle="rating" />
         </section>
 
         {/* Promo banners */}
@@ -177,7 +191,7 @@ export default function Home() {
         </section>
 
         {/* Quiz strip */}
-        <section className="quiz panel">
+        <section className="quiz panel" style={{ marginBottom: 56 }}>
           <div>
             <span className="quiz__title">Find your scent in 60 seconds</span>
             <span>Answer 5 quick questions and get your perfect match.</span>
@@ -185,20 +199,6 @@ export default function Home() {
           <Link to="/quiz" className="btn btn--primary">
             Take the quiz
           </Link>
-        </section>
-
-        {/* Top rated */}
-        <section className="home-section" style={{ paddingBottom: 56 }}>
-          <div className="section-head">
-            <div>
-              <h2>Top rated</h2>
-              <p className="section-head__sub">Our highest-rated fragrances, chosen by customers.</p>
-            </div>
-            <Link to="/collections/top-rated" className="text-link">
-              See all top rated
-            </Link>
-          </div>
-          <Grid query={{ collection: 'top-rated', sort: 'top-rated', pageSize: 4 }} badgeStyle="rating" />
         </section>
       </main>
 
