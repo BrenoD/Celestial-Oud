@@ -19,6 +19,10 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id'];
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
+  pending_payment: 'Awaiting payment',
+  paid: 'Confirmed',
+  processing: 'Being prepared',
+  refunded: 'Refunded',
   confirmed: 'Confirmed',
   dispatched: 'Dispatched',
   delivered: 'Delivered',
@@ -40,8 +44,8 @@ function SignIn() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const onSuccess = (r: { token: string; user: Parameters<typeof signInStore>[1] }) => {
-      signInStore(r.token, r.user);
+    const onSuccess = (r: { token: string; refreshToken?: string; user: Parameters<typeof signInStore>[1] }) => {
+      signInStore(r.token, r.user, r.refreshToken ?? null);
       navigate(next, { replace: true });
     };
     if (mode === 'signin') signIn.mutate({ email, password }, { onSuccess });
@@ -138,6 +142,11 @@ function Dashboard() {
             {t.label}
           </Link>
         ))}
+        {user && ['viewer', 'support', 'manager', 'admin'].includes(user.role ?? '') && (
+          <Link to="/admin" className="acct__tab" style={{ color: 'var(--bronze-dark)', fontWeight: 600 }}>
+            Admin →
+          </Link>
+        )}
         <button
           type="button"
           className="acct__tab acct__tab--out"

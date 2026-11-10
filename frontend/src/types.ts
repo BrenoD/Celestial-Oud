@@ -16,6 +16,7 @@ export type Wear = 'day' | 'evening' | 'summer' | 'winter';
 export type ProductTag = 'bestseller' | 'new' | 'top-rated' | 'gift' | 'set' | 'offer' | 'oud';
 
 export interface ProductSize {
+  id?: number;
   /** Stable identifier used in basket lines and orders, e.g. "royal-oud-50ml". */
   sku: string;
   label: string; // "50ml"
@@ -23,6 +24,9 @@ export interface ProductSize {
   price: number; // pence
   compareAtPrice?: number; // pence, for offers
   inStock: boolean;
+  stock?: number;
+  isSample?: boolean;
+  sort?: number;
 }
 
 export interface ScentProfile {
@@ -54,6 +58,10 @@ export interface Product {
   description: string;
   howToWear: string;
   ingredients: string;
+  allergens?: string[];
+  responsiblePerson?: string | null;
+  cpsrRef?: string | null;
+  scpnRef?: string | null;
   collection: { slug: string; name: string };
 }
 
@@ -66,10 +74,13 @@ export interface ProductSummary
 }
 
 export interface Collection {
+  id?: number;
   slug: string;
   name: string;
   description: string;
   image?: string;
+  sort?: number;
+  visible?: boolean;
 }
 
 export interface ProductQuery {
@@ -148,7 +159,7 @@ export interface CreateOrderRequest {
   paymentToken: string;
 }
 
-export type OrderStatus = 'confirmed' | 'dispatched' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending_payment' | 'paid' | 'processing' | 'confirmed' | 'dispatched' | 'delivered' | 'cancelled' | 'refunded';
 
 export interface Order {
   id: string; // "CO-1042"
@@ -164,6 +175,12 @@ export interface Order {
   total: number;
   shippingAddress: Address;
   tracking?: { carrier: string; number: string; url?: string };
+  paymentStatus?: string;
+  discountCode?: string;
+  deliveryMethodId?: string;
+  giftWrap?: boolean;
+  giftMessage?: string;
+  notes?: string;
 }
 
 /* ---------- Account ---------- */
@@ -173,10 +190,19 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  /** customer | viewer | support | manager | admin */
+  role?: string;
+  tier?: string;
+  points?: number;
+  marketingEmail?: boolean;
+  marketingSms?: boolean;
+  marketingWhatsapp?: boolean;
 }
 
 export interface AuthResponse {
   token: string;
+  refreshToken?: string;
+  expiresAt?: string;
   user: User;
 }
 

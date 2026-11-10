@@ -130,6 +130,13 @@ CPSR / SCPN) with **[Placeholder]** company details and full policy text. "Last 
 
 ---
 
+## 15. Admin — `/admin/:section`  (`src/admin/`)
+Staff only (viewer/support/manager/admin). 25 sections mirroring printforge: dashboard (metrics, 14-day revenue
+chart, recent orders, low stock, top products), orders, shipments, messages, products, collections, stock alerts,
+customers, analytics, payments, discount codes, promotions, reviews, newsletter, delivery, taxes, emails,
+notifications, integrations, content, blog, users, settings, audit log. ✅ against the Go API; in preview mode
+backed by a localStorage mock.
+
 ## Imagery
 No photography is used anywhere in the storefront: products show a "Photo coming soon" block and hero / collection tiles / about cards show an ivory brand panel with the emblem. Only `logo_dark.png` ships in `public/images`. The moodboard crops remain in `handoff/assets` for reference.
 

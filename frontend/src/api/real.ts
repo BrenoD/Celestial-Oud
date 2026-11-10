@@ -1,4 +1,4 @@
-/** Real Go API adapter. Endpoint shapes documented in frontend/README.md. */
+/** Real Go API adapter (backend/). Endpoint shapes documented in frontend/README.md. */
 import type * as T from '@/types';
 import { qs, request } from './client';
 import type { StoreApi } from './index';
@@ -12,20 +12,14 @@ export const api: StoreApi = {
   listReviews: (slug) => request(`/v1/products/${encodeURIComponent(slug)}/reviews`),
   listDeliveryMethods: () => request('/v1/delivery-methods'),
   lookupPostcode: (postcode) => request(`/v1/address/lookup${qs({ postcode })}`),
-  validateDiscount: (code, subtotal) =>
-    request('/v1/discounts/validate', { method: 'POST', body: { code, subtotal } }),
+  validateDiscount: (code, subtotal) => request('/v1/discounts/validate', { method: 'POST', body: { code, subtotal } }),
   createOrder: (req, idempotencyKey) =>
-    request('/v1/orders', {
-      method: 'POST',
-      body: req,
-      headers: { 'Idempotency-Key': idempotencyKey },
-      timeoutMs: 20_000,
-    }),
+    request('/v1/orders', { method: 'POST', body: req, headers: { 'Idempotency-Key': idempotencyKey }, timeoutMs: 20_000 }),
   getOrder: (id, email) => request(`/v1/orders/${encodeURIComponent(id)}${qs({ email })}`),
   listOrders: () => request('/v1/account/orders'),
   signIn: (email, password) => request('/v1/auth/login', { method: 'POST', body: { email, password } }),
   register: (input) => request('/v1/auth/register', { method: 'POST', body: input }),
-  subscribeNewsletter: (email) => request('/v1/newsletter', { method: 'POST', body: { email } }),
+  subscribeNewsletter: (email) => request('/v1/newsletter', { method: 'POST', body: { email, source: 'footer' } }),
   contact: (input) => request('/v1/contact', { method: 'POST', body: input }),
   listFaqs: () => request('/v1/content/faqs'),
 };

@@ -64,7 +64,13 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
         credentials: 'omit',
       });
 
-      if (res.status === 401) useAuthStore.getState().signOut();
+      if (res.status === 401 && !opts.headers?.['X-Retry-Auth']) {
+        const refreshed = await tryRefresh();
+        if (refreshed) {
+          return request<T>(path, { ...opts, headers: { ...opts.headers, 'X-Retry-Auth': '1' } });
+        }
+        useAuthStore.getState().signOut();
+      }
 
       if (!res.ok) {
         let payload: { message?: string; code?: string; details?: unknown } = {};
@@ -91,6 +97,29 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
       opts.signal?.removeEventListener('abort', onOuterAbort);
     }
   }
+}
+
+// Exchange the refresh token once; returns false when the session is gone.
+let refreshing: Promise<boolean> | null = null;
+async function tryRefresh(): Promise<boolean> {
+  const { refreshToken, setTokens } = useAuthStore.getState();
+  if (!refreshToken || !config.apiUrl) return false;
+  refreshing ??= fetch(`${config.apiUrl}/v1/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  })
+    .then(async (r) => {
+      if (!r.ok) return false;
+      const data = (await r.json()) as { token: string; refreshToken?: string };
+      setTokens(data.token, data.refreshToken ?? null);
+      return true;
+    })
+    .catch(() => false)
+    .finally(() => {
+      refreshing = null;
+    });
+  return refreshing;
 }
 
 export function qs(params: Record<string, unknown>): string {

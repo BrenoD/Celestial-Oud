@@ -18,6 +18,8 @@ const Wishlist = lazy(() => import('@/pages/Wishlist'));
 const Legal = lazy(() => import('@/pages/Legal'));
 const Quiz = lazy(() => import('@/pages/Quiz'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
+const AdminLayout = lazy(() => import('@/admin/AdminLayout'));
+const AdminSection = lazy(() => import('@/admin/sections'));
 
 const router = createBrowserRouter([
   {
@@ -38,6 +40,14 @@ const router = createBrowserRouter([
       { path: '/quiz', element: <Quiz /> },
       { path: '/legal/:page', element: <Legal /> },
       { path: '*', element: <NotFound /> },
+    ],
+  },
+  {
+    path: '/admin',
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+      { path: ':section', element: <AdminSection /> },
     ],
   },
   {

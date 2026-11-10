@@ -4,8 +4,18 @@
  * Orders are kept in sessionStorage so the confirmation page survives reload.
  */
 import type * as T from '@/types';
-import { collections, deliveryMethods, faqs, products, reviews } from '@/data/catalogue';
+import { collections, deliveryMethods, faqs, reviews } from '@/data/catalogue';
+import { liveCatalogue } from '@/admin/api.mock';
 import { ApiError } from './client';
+
+// Products come from the admin preview state so edits made in /admin show in the store.
+const products = new Proxy([] as T.Product[], {
+  get(_t, prop) {
+    const live = liveCatalogue();
+    const v = Reflect.get(live, prop);
+    return typeof v === 'function' ? v.bind(live) : v;
+  },
+});
 import type { StoreApi } from './index';
 
 const latency = () => new Promise((r) => setTimeout(r, 120 + Math.random() * 180));
@@ -248,11 +258,15 @@ export const api: StoreApi = {
   async signIn(email) {
     await latency();
     if (!email.includes('@')) throw new ApiError(422, 'Enter a valid email address', 'invalid_email');
-    return { token: 'mock-jwt', user: { id: 'u1', email, firstName: 'Guest', lastName: 'Customer' } };
+    // Preview convenience: the local part of the email picks the staff role
+    // (admin@…, manager@…, support@…, viewer@…); anything else is a customer.
+    const local = email.split('@')[0].toLowerCase();
+    const role = ['admin', 'manager', 'support', 'viewer'].find((r) => local.includes(r)) ?? 'customer';
+    return { token: 'mock-jwt', user: { id: 'u1', email, firstName: role === 'customer' ? 'Guest' : local, lastName: 'Customer', role } };
   },
   async register(input) {
     await latency();
-    return { token: 'mock-jwt', user: { id: 'u1', email: input.email, firstName: input.firstName, lastName: input.lastName } };
+    return { token: 'mock-jwt', user: { id: 'u1', email: input.email, firstName: input.firstName, lastName: input.lastName, role: 'customer' } };
   },
   async subscribeNewsletter() {
     await latency();

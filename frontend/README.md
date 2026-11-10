@@ -63,6 +63,19 @@ src/
   types.ts    shared domain types (keep in sync with the Go API)
 ```
 
+## Admin (`/admin`)
+
+Back office ported from printforge3d-store's admin, as React: grouped sidebar (Operations · Catalogue · Sales ·
+Marketing · Configuration · System), role gates (`src/admin/rbac.ts`), a config-driven `ListManager`
+(create form + searchable table + edit modal), `ToggleList` and dedicated screens for dashboard, products
+(sizes/stock, notes pyramid, INCI/allergens/Responsible Person, images), orders & shipments (state machine,
+dispatch with tracking, refunds), customers, analytics, payments, discount codes, scheduled promotions, review
+moderation, newsletter (bulk email), messages (reply), delivery methods, taxes, email templates, notifications,
+integrations, content blocks, blog, staff & roles, settings, audit log.
+
+`src/admin/api.ts` picks `api.real.ts` (Go routes) or `api.mock.ts` (localStorage, used on GitHub Pages) — same
+`AdminApi` interface. In mock mode the storefront reads the admin's catalogue, so edits show in the shop.
+
 ## Routes
 
 | Path | Page |
@@ -80,6 +93,7 @@ src/
 | `/help` | Track order, delivery, returns, FAQ, contact |
 | `/about` | Our story |
 | `/legal/:page` | terms · privacy · cookies · accessibility · product-safety |
+| `/admin/:section` | Back office (staff roles only) |
 
 ## REST contract expected from the Go API
 
