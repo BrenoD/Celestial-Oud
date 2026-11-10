@@ -1,0 +1,43 @@
+# Cloudflare Worker that fronts the Go API running in a Cloudflare Container.
+#   npm install && npx wrangler deploy
+# Requires the Workers Paid plan (Containers). Secrets:
+#   npx wrangler secret put CRON_SECRET
+name = "celestial-oud-api"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[containers]]
+class_name = "ApiContainer"
+image = "../Dockerfile"          # built & pushed by `wrangler deploy`
+max_instances = 10               # horizontal scale ceiling; raise with traffic
+instance_type = "basic"          # 1/4 vCPU, 1 GiB — Go API is light
+
+[[durable_objects.bindings]]
+name = "API"
+class_name = "ApiContainer"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ApiContainer"]
+
+# Every 5 minutes: scheduled promotions, expiring unpaid orders, stock alerts, purges.
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+APP_ENV = "production"
+PUBLIC_URL = "https://celestialoud.co.uk"
+API_URL = "https://api.celestialoud.co.uk"
+CORS_ORIGINS = "https://celestialoud.co.uk,https://www.celestialoud.co.uk,https://brenod.github.io"
+EMAIL_FROM = "Celestial Oud <noreply@celestialoud.co.uk>"
+
+# Container env is set from Worker secrets at start (see src/index.ts):
+#   DATABASE_URL (Supabase pooler URL, or a Hyperdrive connection string)
+#   JWT_SECRET, STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET,
+#   RESEND_API_KEY, ADMIN_EMAILS, CRON_SECRET, IDEAL_POSTCODES_KEY
+#
+# Optional: Hyperdrive pooling in front of Supabase
+# [[hyperdrive]]
+# binding = "HYPERDRIVE"
+# id = "<hyperdrive-id>"

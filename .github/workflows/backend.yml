@@ -1,0 +1,50 @@
+name: Backend
+
+on:
+  push:
+    branches: [main, frontend]
+    paths: ['backend/**', '.github/workflows/backend.yml']
+  pull_request:
+    paths: ['backend/**', '.github/workflows/backend.yml']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: celestial
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: backend/go.sum
+      - run: go vet ./...
+      - run: go test ./...
+      - run: go build -o /tmp/api ./cmd/api
+      - name: Boot against Postgres and smoke the API
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/celestial?sslmode=disable
+          PORT: '8090'
+          CRON_SECRET: ci
+        run: |
+          /tmp/api & sleep 3
+          curl -fsS localhost:8090/readyz
+          curl -fsS 'localhost:8090/v1/products?pageSize=1' | grep -q '"items"'
+          curl -fsS -XPOST localhost:8090/internal/cron/tick -H 'X-Cron-Secret: ci' | grep -q promotionsApplied
+
+  docker:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t celestial-oud-api:ci ./backend
