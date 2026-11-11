@@ -98,13 +98,17 @@ export default function AdminLayout() {
           <Logo compact />
           <span className="adm__badge">Admin</span>
           <span className="adm__user">
-            {user?.email} · <b>{user?.role}</b>
+            <span className="adm__user-email" title={user?.email}>
+              {user?.email} · <b>{user?.role}</b>
+            </span>
+            <span className="table-actions">
             <Link to="/" className="btn btn--outline btn--xs">
               View store
             </Link>
             <button type="button" className="btn btn--outline btn--xs" onClick={() => { signOut(); navigate('/'); }}>
               Sign out
             </button>
+            </span>
           </span>
         </header>
         <div className="adm__body">

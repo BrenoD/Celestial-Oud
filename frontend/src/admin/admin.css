@@ -11,8 +11,15 @@
   border-bottom: 1px solid var(--line);
   padding: 10px var(--gutter);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 10px 16px;
+}
+.adm__user-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
 }
 .adm__top .logo__wordmark {
   font-size: 18px;
@@ -29,10 +36,12 @@
 .adm__user {
   margin-left: auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   font-size: 13px;
   color: var(--muted);
+  min-width: 0;
 }
 .adm__body {
   flex: 1;
@@ -548,6 +557,38 @@
     display: none;
   }
 }
+@media (max-width: 640px) {
+  .adm__top .logo__wordmark {
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .adm__user {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .adm__user-email {
+    max-width: 55vw;
+  }
+  .adm__body {
+    padding-top: 14px;
+  }
+  .adm__head h1 {
+    font-size: 26px;
+  }
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .metric strong {
+    font-size: 22px;
+  }
+  .ocard__head {
+    gap: 8px;
+  }
+  .ocard__head .table-actions {
+    width: 100%;
+  }
+}
 @media (max-width: 560px) {
   .adm-form,
   .adm-toolbar {
@@ -556,4 +597,13 @@
   .span-2 {
     grid-column: span 1;
   }
+}
+
+/* Status used as a sentence (notices, errors) must wrap, unlike inline pills. */
+p.status {
+  display: block;
+  white-space: normal;
+  border-radius: var(--radius);
+  font-weight: 500;
+  line-height: 1.45;
 }

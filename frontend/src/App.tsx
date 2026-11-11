@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { StoreLayout, CheckoutLayout } from '@/components/layout/Layout';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -20,6 +20,22 @@ const Quiz = lazy(() => import('@/pages/Quiz'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const AdminLayout = lazy(() => import('@/admin/AdminLayout'));
 const AdminSection = lazy(() => import('@/admin/sections'));
+
+/** Boundary for lazily loaded top-level layouts (store/checkout layouts are eager and own their Suspense). */
+function Lazy({ children }: { children: ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <main className="container page" aria-busy="true">
+          <div className="skeleton" style={{ height: 44, width: 320, marginBottom: 24 }} />
+          <div className="skeleton" style={{ height: 420 }} />
+        </main>
+      }
+    >
+      {children}
+    </Suspense>
+  );
+}
 
 const router = createBrowserRouter([
   {
@@ -44,7 +60,16 @@ const router = createBrowserRouter([
   },
   {
     path: '/admin',
-    element: <AdminLayout />,
+    element: (
+      <Lazy>
+        <AdminLayout />
+      </Lazy>
+    ),
+    errorElement: (
+      <Lazy>
+        <NotFound />
+      </Lazy>
+    ),
     children: [
       { index: true, element: <Navigate to="/admin/dashboard" replace /> },
       { path: ':section', element: <AdminSection /> },
@@ -65,7 +90,7 @@ const router = createBrowserRouter([
 export default function App() {
   return (
     <ErrorBoundary>
-      <RouterProvider router={router} />
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />
     </ErrorBoundary>
   );
 }
