@@ -1,0 +1,155 @@
+name: Deploy API to Cloudflare
+
+# Publishes backend/ (Go API in a Cloudflare Container behind a Worker) to a
+# free test URL: https://celestial-oud-api.<account-subdomain>.workers.dev
+#
+# One-time setup — GitHub → Settings → Secrets and variables → Actions:
+#   Secrets (required): CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, DATABASE_URL, JWT_SECRET
+#   Secrets (optional): STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET,
+#                       RESEND_API_KEY, IDEAL_POSTCODES_KEY, CRON_SECRET
+#   Variables (optional, for the real domain later): PUBLIC_URL, API_URL, CORS_ORIGINS, ADMIN_EMAILS
+# Without the required secrets the workflow skips cleanly.
+
+on:
+  push:
+    branches: [frontend]
+    paths: ['backend/**', '.github/workflows/deploy-api.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/cloudflare
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Check configuration
+        id: cfg
+        working-directory: .
+        env:
+          HAS_DB: ${{ secrets.DATABASE_URL != '' }}
+          HAS_JWT: ${{ secrets.JWT_SECRET != '' }}
+        run: |
+          missing=""
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID"
+          [ "$HAS_DB" = "true" ] || missing="$missing DATABASE_URL"
+          [ "$HAS_JWT" = "true" ] || missing="$missing JWT_SECRET"
+          if [ -n "$missing" ]; then
+            echo "::notice::API deploy skipped — add these repository secrets:$missing"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.cfg.outputs.ready == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.cfg.outputs.ready == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/cloudflare/package-lock.json
+
+      - name: Resolve URLs
+        if: steps.cfg.outputs.ready == 'true'
+        id: urls
+        run: |
+          sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["subdomain"])')
+          workers_url="https://celestial-oud-api.${sub}.workers.dev"
+          api_url="${{ vars.API_URL }}"
+          [ -n "$api_url" ] || api_url="$workers_url"
+          echo "workers_url=$workers_url" >> "$GITHUB_OUTPUT"
+          echo "api_url=$api_url" >> "$GITHUB_OUTPUT"
+
+      - name: Write runtime vars into wrangler.toml
+        if: steps.cfg.outputs.ready == 'true'
+        env:
+          PUBLIC_URL: ${{ vars.PUBLIC_URL || 'https://brenod.github.io/Celestial-Oud' }}
+          API_URL: ${{ steps.urls.outputs.api_url }}
+          CORS_ORIGINS: ${{ vars.CORS_ORIGINS || 'https://brenod.github.io,https://celestialoud.co.uk,https://www.celestialoud.co.uk' }}
+          ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS || '' }}
+        run: |
+          python3 - <<'EOF'
+          import os, re
+          p = 'wrangler.toml'
+          s = open(p).read()
+          for k in ('PUBLIC_URL', 'API_URL', 'CORS_ORIGINS'):
+              s = re.sub(rf'^{k} = ".*"$', f'{k} = "{os.environ[k]}"', s, flags=re.M)
+          s = s.replace('EMAIL_FROM = ', f'ADMIN_EMAILS = "{os.environ["ADMIN_EMAILS"]}"\nEMAIL_FROM = ', 1)
+          open(p, 'w').write(s)
+          EOF
+          sed -n '/^\[vars\]/,/^#/p' wrangler.toml
+
+      - run: npm ci
+        if: steps.cfg.outputs.ready == 'true'
+
+      - run: npx tsc --noEmit
+        if: steps.cfg.outputs.ready == 'true'
+
+      - name: Deploy (Worker + Container image)
+        if: steps.cfg.outputs.ready == 'true'
+        run: npx wrangler deploy
+
+      - name: Upload secrets
+        if: steps.cfg.outputs.ready == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          IDEAL_POSTCODES_KEY: ${{ secrets.IDEAL_POSTCODES_KEY }}
+        run: |
+          umask 077
+          python3 - > "$RUNNER_TEMP/secrets.json" <<'EOF'
+          import hashlib, json, os
+          keys = ['DATABASE_URL', 'JWT_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_PUBLISHABLE_KEY',
+                  'STRIPE_WEBHOOK_SECRET', 'RESEND_API_KEY', 'IDEAL_POSTCODES_KEY']
+          out = {k: os.environ.get(k, '') for k in keys}
+          # CRON_SECRET is optional: derive a stable one from JWT_SECRET when unset.
+          out['CRON_SECRET'] = os.environ.get('CRON_SECRET') or hashlib.sha256(
+              ('cron:' + os.environ['JWT_SECRET']).encode()).hexdigest()
+          print(json.dumps(out))
+          EOF
+          npx wrangler secret bulk "$RUNNER_TEMP/secrets.json"
+          rm -f "$RUNNER_TEMP/secrets.json"
+
+      - name: Redeploy so containers start with the secrets
+        if: steps.cfg.outputs.ready == 'true'
+        run: npx wrangler deploy
+
+      - name: Smoke test
+        if: steps.cfg.outputs.ready == 'true'
+        env:
+          URL: ${{ steps.urls.outputs.workers_url }}
+        run: |
+          # First request cold-starts the container; give it a couple of minutes.
+          for i in $(seq 1 24); do
+            if out=$(curl -fsS --max-time 20 "$URL/readyz"); then echo "$out"; break; fi
+            echo "waiting for container ($i)…"; sleep 5
+          done
+          curl -fsS --max-time 20 "$URL/readyz" | grep -q ready
+          curl -fsS --max-time 20 "$URL/v1/products?pageSize=1" | grep -q '"items"'
+          {
+            echo "### API deployed"
+            echo ""
+            echo "- Test URL: $URL"
+            echo "- Health: $URL/readyz"
+            echo "- Products: $URL/v1/products"
+          } >> "$GITHUB_STEP_SUMMARY"

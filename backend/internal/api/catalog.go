@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -18,7 +19,7 @@ func (a *API) listCollections(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	edgeCache(w, 300)
 	httpx.JSON(w, 200, cs)
 }
 
@@ -28,7 +29,7 @@ func (a *API) getCollection(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	edgeCache(w, 300)
 	httpx.JSON(w, 200, c)
 }
 
@@ -52,7 +53,7 @@ func (a *API) listProducts(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=60")
+	edgeCache(w, 30)
 	httpx.JSON(w, 200, page)
 }
 
@@ -76,7 +77,7 @@ func (a *API) getProduct(w http.ResponseWriter, r *http.Request) {
 	if uid := userID(r); uid != nil {
 		a.st.RecordView(r.Context(), *uid, p.ID)
 	}
-	w.Header().Set("Cache-Control", "public, max-age=60")
+	edgeCache(w, 30)
 	httpx.JSON(w, 200, p)
 }
 
@@ -86,7 +87,7 @@ func (a *API) related(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	edgeCache(w, 300)
 	httpx.JSON(w, 200, items)
 }
 
@@ -230,7 +231,7 @@ func (a *API) faqs(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=600")
+	edgeCache(w, 300)
 	httpx.JSON(w, 200, f)
 }
 
@@ -240,7 +241,7 @@ func (a *API) contentBlock(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, httpx.ErrNotFound)
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	edgeCache(w, 300)
 	httpx.JSON(w, 200, c)
 }
 
@@ -268,7 +269,7 @@ func (a *API) publicSettings(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	w.Header().Set("Cache-Control", "public, max-age=300")
+	edgeCache(w, 300)
 	httpx.JSON(w, 200, map[string]any{
 		"storeName": s.StoreName, "supportEmail": s.SupportEmail, "currency": s.Currency,
 		"freeDeliveryThreshold": s.FreeDeliveryThreshold, "dispatchCutoff": s.DispatchCutoff, "returnsDays": s.ReturnsDays,
@@ -334,4 +335,11 @@ func (a *API) contact(w http.ResponseWriter, r *http.Request) {
 	}
 	a.mail.Admin(r.Context(), "new_message", map[string]any{"name": m.Name, "email": m.Email, "body": m.Body})
 	httpx.NoContent(w)
+}
+
+// edgeCache lets the CDN (Cloudflare edge, via the Worker) keep a public
+// response for a short time while browsers always revalidate. Admin edits then
+// show up for the editor immediately and for shoppers within `seconds`.
+func edgeCache(w http.ResponseWriter, seconds int) {
+	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=0, must-revalidate, s-maxage=%d", seconds))
 }

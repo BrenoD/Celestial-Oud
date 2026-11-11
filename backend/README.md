@@ -76,6 +76,9 @@ Stock is reserved when the order is created; unpaid orders expire after 24 h (cr
 
 ## Deploy to Cloudflare
 
+Recommended: from GitHub Actions, no terminal needed — see [`docs/DEPLOY.md`](../docs/DEPLOY.md)
+(`.github/workflows/deploy-api.yml` publishes to a free `workers.dev` test URL). Manual alternative:
+
 ```bash
 cd backend/cloudflare && npm install
 npx wrangler secret put DATABASE_URL      # Supabase pooler URL (or use Hyperdrive)

@@ -1,12 +1,21 @@
 name: Deploy preview to GitHub Pages
 
-# Publishes the storefront (mock API) to https://brenod.github.io/Celestial-Oud/
-# on every push to the frontend branch, so the design can be reviewed online.
+# Publishes the storefront + admin to https://brenod.github.io/Celestial-Oud/
+#
+# API used by the build (first match wins):
+#   1. repository variable VITE_API_URL (e.g. the real domain later)
+#   2. the Cloudflare test API from deploy-api.yml, if CLOUDFLARE_* secrets exist
+#      and https://celestial-oud-api.<subdomain>.workers.dev/readyz answers
+#   3. otherwise the in-browser mock (the site never breaks)
+# It also rebuilds automatically after each successful API deploy.
 
 on:
   push:
     branches: [frontend]
     paths: ['frontend/**', '.github/workflows/pages.yml']
+  workflow_run:
+    workflows: ['Deploy API to Cloudflare']
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -20,6 +29,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -32,10 +42,38 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - name: Resolve API URL
+        id: api
+        env:
+          VAR_URL: ${{ vars.VITE_API_URL }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          url="$VAR_URL"
+          if [ -z "$url" ] && [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["subdomain"])' || true)
+            [ -n "$sub" ] && url="https://celestial-oud-api.${sub}.workers.dev"
+          fi
+          if [ -n "$url" ]; then
+            ok=""
+            for i in $(seq 1 12); do
+              if curl -fsS --max-time 20 "$url/readyz" | grep -q ready; then ok=1; break; fi
+              sleep 5
+            done
+            if [ -z "$ok" ]; then
+              echo "::warning::API at $url did not answer /readyz — building with the in-browser mock instead."
+              url=""
+            fi
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "### Storefront API: ${url:-in-browser mock}" >> "$GITHUB_STEP_SUMMARY"
       - name: Build with repository sub-path
         run: npm run build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_API_URL: ${{ steps.api.outputs.url }}
       - name: SPA fallback for deep links
         run: cp dist/index.html dist/404.html
       - uses: actions/configure-pages@v5

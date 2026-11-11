@@ -31,6 +31,8 @@ interface RequestOptions {
   timeoutMs?: number;
   retries?: number;
   signal?: AbortSignal;
+  /** Internal: set on the single retry after a token refresh (never sent to the server). */
+  _authRetried?: boolean;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -64,10 +66,10 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
         credentials: 'omit',
       });
 
-      if (res.status === 401 && !opts.headers?.['X-Retry-Auth']) {
+      if (res.status === 401 && !opts._authRetried) {
         const refreshed = await tryRefresh();
         if (refreshed) {
-          return request<T>(path, { ...opts, headers: { ...opts.headers, 'X-Retry-Auth': '1' } });
+          return request<T>(path, { ...opts, _authRetried: true });
         }
         useAuthStore.getState().signOut();
       }

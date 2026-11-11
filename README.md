@@ -6,7 +6,7 @@ UK perfume brand (oud / amber / musk Eau de Parfum). Built by Kartus.
 |---|---|
 | [`frontend/`](frontend/README.md) | Storefront **and admin** (`/admin`) — React + TypeScript + Vite static SPA, nginx Dockerfile. |
 | [`backend/`](backend/README.md) | Go API for Cloudflare Containers + Supabase Postgres (auth, catalogue, orders, Stripe, admin). |
-| [`docs/`](docs/) | `DATA-MODEL.md` (printforge re-reading, three questions per entity), `PAGES.md` (page inventory). |
+| [`docs/`](docs/) | `DEPLOY.md` (test environment → real domain), `DATA-MODEL.md` (printforge re-reading), `PAGES.md` (page inventory). |
 | [`handoff/`](handoff/HANDOFF.md) | Design handoff: brand decisions, legal notes, page map, `.dc.html` mockups and image assets. Reference only, not production code. |
 | `docker-compose.yml` | Runs the storefront on http://localhost:8080. |
 | `.github/workflows/frontend.yml` | CI: typecheck, lint, test, build, Docker smoke test. |
