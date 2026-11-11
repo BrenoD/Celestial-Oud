@@ -36,6 +36,7 @@ go test ./... && go vet ./...
 ```
 - Roles: customer < viewer < support < manager < admin (`httpx.HasRole`); gate admin routes with `auth.RequireRole`.
 - `POST /v1/orders` must stay idempotent (`Idempotency-Key`); `MarkPaid` must stay idempotent (webhook + confirm both call it).
+- Every new table needs `alter table … enable row level security;` in its migration (no policies). Supabase's Data API must never reach our tables; the API connects as owner and bypasses RLS (see `0003_lock_down_data_api.sql`).
 - Never trust client prices: `store.PriceOrder` recomputes everything from SKUs.
 - Payments: Stripe key → real; otherwise mock in development, and in production only with `PAYMENTS_MODE=mock` (else checkout returns 503). No Resend key → emails are logged.
 - Test host now: Render (`render.yaml`); production target: Cloudflare (`backend/cloudflare`, `deploy-api.yml`). See `docs/DEPLOY.md`.
