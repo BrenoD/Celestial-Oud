@@ -69,19 +69,19 @@ jobs:
         run: |
           sub=$(curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" \
-            | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["subdomain"])')
-          workers_url="https://celestial-oud-api.${sub}.workers.dev"
+            | python3 -c 'import json,sys; print((json.load(sys.stdin).get("result") or {}).get("subdomain") or "")' || true)
           api_url="${{ vars.API_URL }}"
-          [ -n "$api_url" ] || api_url="$workers_url"
+          [ -n "$api_url" ] || api_url="https://api.celestialoud.com"
+          if [ -n "$sub" ]; then workers_url="https://celestial-oud-api.${sub}.workers.dev"; else workers_url="$api_url"; fi
           echo "workers_url=$workers_url" >> "$GITHUB_OUTPUT"
           echo "api_url=$api_url" >> "$GITHUB_OUTPUT"
 
       - name: Write runtime vars into wrangler.toml
         if: steps.cfg.outputs.ready == 'true'
         env:
-          PUBLIC_URL: ${{ vars.PUBLIC_URL || 'https://brenod.github.io/Celestial-Oud' }}
+          PUBLIC_URL: ${{ vars.PUBLIC_URL || 'https://celestialoud.com' }}
           API_URL: ${{ steps.urls.outputs.api_url }}
-          CORS_ORIGINS: ${{ vars.CORS_ORIGINS || 'https://brenod.github.io,https://celestialoud.co.uk,https://www.celestialoud.co.uk' }}
+          CORS_ORIGINS: ${{ vars.CORS_ORIGINS || 'https://brenod.github.io,https://celestialoud.com,https://www.celestialoud.com' }}
           ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS || '' }}
           PAYMENTS_MODE: ${{ vars.PAYMENTS_MODE || '' }}
         run: |

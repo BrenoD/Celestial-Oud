@@ -77,8 +77,8 @@ function seed(): State {
       { id: 'u3', email: 'amira@example.com', firstName: 'Amira', lastName: 'Khan', role: 'customer', tier: 'Gold', points: 1210, createdAt: daysAgo(200), orderCount: 9, totalSpent: 68900 },
     ],
     staff: [
-      { id: 's1', email: 'admin@celestialoud.co.uk', firstName: 'Breno', lastName: 'D.', role: 'admin', createdAt: daysAgo(120) },
-      { id: 's2', email: 'ops@celestialoud.co.uk', firstName: 'Sam', lastName: 'Ops', role: 'support', createdAt: daysAgo(40) },
+      { id: 's1', email: 'admin@celestialoud.com', firstName: 'Breno', lastName: 'D.', role: 'admin', createdAt: daysAgo(120) },
+      { id: 's2', email: 'ops@celestialoud.com', firstName: 'Sam', lastName: 'Ops', role: 'support', createdAt: daysAgo(40) },
     ],
     discounts: [
       { code: 'WELCOME10', type: 'percent', value: 10, minSubtotal: 0, maxUses: null, uses: 38, startsAt: null, endsAt: null, active: true },
@@ -127,7 +127,7 @@ function seed(): State {
         { id: 6, key: 'klaviyo', name: 'Klaviyo', description: 'Marketing automation', connected: false },
       ],
     },
-    settings: { storeName: 'Celestial Oud', supportEmail: 'hello@celestialoud.co.uk', currency: 'GBP', freeDeliveryThreshold: 5000, dispatchCutoff: '14:00', returnsDays: 14, maintenanceMode: false, companyName: null, companyNumber: null, registeredAddress: null, vatNumber: null },
+    settings: { storeName: 'Celestial Oud', supportEmail: 'hello@celestialoud.com', currency: 'GBP', freeDeliveryThreshold: 5000, dispatchCutoff: '14:00', returnsDays: 14, maintenanceMode: false, companyName: null, companyNumber: null, registeredAddress: null, vatNumber: null },
     audit: [],
     seq: 1000,
   };
@@ -154,7 +154,7 @@ function save(s: State) {
 }
 function audit(action: string, entity: string, entityId: string, diff?: unknown) {
   const s = load();
-  s.audit.unshift({ id: ++s.seq, action, entity, entity_id: entityId, diff: diff ?? null, created_at: nowISO(), actor: 'preview@celestialoud.co.uk' });
+  s.audit.unshift({ id: ++s.seq, action, entity, entity_id: entityId, diff: diff ?? null, created_at: nowISO(), actor: 'preview@celestialoud.com' });
   s.audit = s.audit.slice(0, 200);
   save(s);
 }

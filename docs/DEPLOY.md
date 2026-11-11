@@ -72,15 +72,23 @@ https://brenod.github.io/Celestial-Oud/ uses the real API.
    ```
 3. Sign out and back in → *Account* shows **Admin →**. Invite the rest of the team from *Admin → Users*.
 
-## 3. Moving to the real domain later
+## 3. Production on celestialoud.com (Cloudflare)
 
-1. Add the domain to Cloudflare; in *Workers & Pages → celestial-oud-api → Settings → Domains & Routes* add
-   `api.<domain>` as a custom domain.
-2. Host the storefront on Cloudflare Pages (or keep GitHub Pages with a custom domain).
-3. GitHub *Variables*: `VITE_API_URL=https://api.<domain>`, `PUBLIC_URL=https://<domain>`,
-   `API_URL=https://api.<domain>`, `CORS_ORIGINS=https://<domain>,https://www.<domain>`.
-4. Re-run both workflows. The `workers.dev` URL keeps working, so nothing breaks during the switch.
-5. Stripe webhook → `https://api.<domain>/webhooks/stripe`.
+| What | URL | Workflow |
+|---|---|---|
+| Storefront + admin | https://celestialoud.com (`www` → 301 to apex) | `deploy-site.yml` → Worker `celestial-oud-site` (`frontend/cloudflare/`, static assets, SPA fallback) |
+| API | https://api.celestialoud.com | `deploy-api.yml` → Worker + Container `celestial-oud-api` (`backend/cloudflare/`) |
+
+Both are custom domains declared in their `wrangler.toml`; Cloudflare creates the DNS records and certificates on
+deploy. Requirements: the `celestialoud.com` zone on the same account, the Workers Paid plan (Containers), and the
+repository secrets `CLOUDFLARE_API_TOKEN` (template *Edit Cloudflare Workers* + *Containers: Edit*, all zones),
+`CLOUDFLARE_ACCOUNT_ID`, `DATABASE_URL`, `JWT_SECRET`.
+
+Defaults need no repository variables. Overrides: `SITE_API_URL` (storefront build), `PUBLIC_URL`, `API_URL`,
+`CORS_ORIGINS`, `ADMIN_EMAILS`, `PAYMENTS_MODE` (API). Without Stripe keys the production checkout is refused
+(503) unless `PAYMENTS_MODE=mock`. Stripe webhook → `https://api.celestialoud.com/webhooks/stripe`.
+
+GitHub Pages + Render stay up as the preview/fallback environment until they are switched off.
 
 ## Caching & load
 

@@ -113,7 +113,7 @@ Saved products (localStorage), product cards + Remove, empty state. **Real** (de
 | Delivery (`#delivery`) | Same-day dispatch before 2pm, 2–3 days standard, flammable-goods courier note | Real |
 | Returns (`#returns`) | 14-day cancellation, opened fragrances excluded for hygiene, statutory rights | Real |
 | FAQ (`#faq`) | 6 questions; 2 answers **[Placeholder]** (longevity, international) | Mixed |
-| Contact (`#contact`) | Email hello@celestialoud.co.uk, WhatsApp **[number]**, hours; form name/email/order/message → `/v1/contact` | Form real · details placeholder |
+| Contact (`#contact`) | Email hello@celestialoud.com, WhatsApp **[number]**, hours; form name/email/order/message → `/v1/contact` | Form real · details placeholder |
 
 ## 12. About / Our story — `/about`  (`pages/About.tsx`)
 Hero headline + story paragraph **[Placeholder]** with brand panel (no photo); three cards — *What is oud?* (real,

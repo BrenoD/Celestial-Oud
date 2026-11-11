@@ -14,7 +14,7 @@ export const config = {
     name: 'Celestial Oud',
     tagline: 'Fragrances',
     instagram: 'https://instagram.com/celestial_oud',
-    supportEmail: 'hello@celestialoud.co.uk',
+    supportEmail: 'hello@celestialoud.com',
   },
 } as const;
 

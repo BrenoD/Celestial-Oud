@@ -59,7 +59,7 @@ function Gate() {
         {useMockApi && (
           <>
             <br />
-            Preview mode: use an email containing <b>admin</b>, <b>manager</b>, <b>support</b> or <b>viewer</b> (e.g. admin@celestialoud.co.uk) with any password.
+            Preview mode: use an email containing <b>admin</b>, <b>manager</b>, <b>support</b> or <b>viewer</b> (e.g. admin@celestialoud.com) with any password.
           </>
         )}
       </p>

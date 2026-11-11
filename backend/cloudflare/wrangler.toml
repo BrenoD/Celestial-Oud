@@ -6,6 +6,8 @@ name = "celestial-oud-api"
 main = "src/index.ts"
 # Free test URL: https://celestial-oud-api.<account-subdomain>.workers.dev (kept on after the real domain is added)
 workers_dev = true
+# Real domain: Cloudflare creates the DNS record and TLS certificate (zone must be on this account).
+routes = [{ pattern = "api.celestialoud.com", custom_domain = true }]
 compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]
 
@@ -31,10 +33,10 @@ crons = ["*/5 * * * *"]
 APP_ENV = "production"
 # Overridden at deploy time by .github/workflows/deploy-api.yml (repo variables
 # PUBLIC_URL / API_URL); these defaults are for the future real domain.
-PUBLIC_URL = "https://celestialoud.co.uk"
-API_URL = "https://api.celestialoud.co.uk"
-CORS_ORIGINS = "https://celestialoud.co.uk,https://www.celestialoud.co.uk,https://brenod.github.io"
-EMAIL_FROM = "Celestial Oud <noreply@celestialoud.co.uk>"
+PUBLIC_URL = "https://celestialoud.com"
+API_URL = "https://api.celestialoud.com"
+CORS_ORIGINS = "https://celestialoud.com,https://www.celestialoud.com,https://brenod.github.io"
+EMAIL_FROM = "Celestial Oud <noreply@celestialoud.com>"
 
 # Container env is set from Worker secrets at start (see src/index.ts):
 #   DATABASE_URL — Supabase project bualtfdrfvsnnydwtmgz, West EU (Paris, eu-west-3):

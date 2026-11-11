@@ -56,7 +56,7 @@ func Load() (Config, error) {
 		StripeWebhookSecret:  os.Getenv("STRIPE_WEBHOOK_SECRET"),
 
 		ResendAPIKey: os.Getenv("RESEND_API_KEY"),
-		EmailFrom:    get("EMAIL_FROM", "Celestial Oud <noreply@celestialoud.co.uk>"),
+		EmailFrom:    get("EMAIL_FROM", "Celestial Oud <noreply@celestialoud.com>"),
 		AdminEmails:  list("ADMIN_EMAILS", ""),
 
 		CronSecret:        os.Getenv("CRON_SECRET"),

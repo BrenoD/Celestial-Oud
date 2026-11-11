@@ -38,4 +38,4 @@ services:
       - key: CORS_ORIGINS
         value: https://brenod.github.io
       - key: EMAIL_FROM
-        value: Celestial Oud <noreply@celestialoud.co.uk>
+        value: Celestial Oud <noreply@celestialoud.com>

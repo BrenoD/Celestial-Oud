@@ -1,0 +1,18 @@
+# Storefront + admin SPA on Cloudflare (static assets on the edge).
+# Deployed by .github/workflows/deploy-site.yml after `npm run build`.
+name = "celestial-oud-site"
+main = "worker.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+routes = [
+  { pattern = "celestialoud.com", custom_domain = true },
+  { pattern = "www.celestialoud.com", custom_domain = true },
+]
+
+[assets]
+directory = "../dist"
+binding = "ASSETS"
+# Deep links (/products/x, /admin/orders) fall back to index.html.
+not_found_handling = "single-page-application"
+# Lets worker.js redirect www → apex before an asset is served.
+run_worker_first = true
