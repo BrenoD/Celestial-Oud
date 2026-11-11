@@ -27,10 +27,26 @@ jobs:
     defaults:
       run:
         working-directory: frontend
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
+      - name: Normalise Cloudflare credentials
+        working-directory: .
+        env:
+          RAW_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          RAW_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # Pasted secrets often carry stray spaces/newlines; a multi-line token is a paste mistake.
+          for pair in "CLOUDFLARE_API_TOKEN:$RAW_TOKEN" "CLOUDFLARE_ACCOUNT_ID:$RAW_ACCOUNT"; do
+            name="${pair%%:*}"; val="${pair#*:}"
+            [ -n "$val" ] || continue
+            lines=$(printf '%s\n' "$val" | tr -d '\r' | awk 'NF' | wc -l)
+            if [ "$lines" -gt 1 ]; then
+              echo "::error::Secret $name has $lines non-empty lines — re-save it with only the value (Settings → Secrets → Actions)."
+              exit 1
+            fi
+            clean=$(printf '%s' "$val" | tr -d '[:space:]')
+            echo "::add-mask::$clean"
+            echo "$name=$clean" >> "$GITHUB_ENV"
+          done
       - name: Check configuration
         id: cfg
         working-directory: .
