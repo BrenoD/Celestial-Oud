@@ -37,4 +37,5 @@ go test ./... && go vet ./...
 - Roles: customer < viewer < support < manager < admin (`httpx.HasRole`); gate admin routes with `auth.RequireRole`.
 - `POST /v1/orders` must stay idempotent (`Idempotency-Key`); `MarkPaid` must stay idempotent (webhook + confirm both call it).
 - Never trust client prices: `store.PriceOrder` recomputes everything from SKUs.
-- No Stripe key → mock payment mode; no Resend key → emails are logged.
+- Payments: Stripe key → real; otherwise mock in development, and in production only with `PAYMENTS_MODE=mock` (else checkout returns 503). No Resend key → emails are logged.
+- Test host now: Render (`render.yaml`); production target: Cloudflare (`backend/cloudflare`, `deploy-api.yml`). See `docs/DEPLOY.md`.

@@ -3,7 +3,7 @@ name: Deploy preview to GitHub Pages
 # Publishes the storefront + admin to https://brenod.github.io/Celestial-Oud/
 #
 # API used by the build (first match wins):
-#   1. repository variable VITE_API_URL (e.g. the real domain later)
+#   1. repository variable VITE_API_URL (Render test API now, the real domain later)
 #   2. the Cloudflare test API from deploy-api.yml, if CLOUDFLARE_* secrets exist
 #      and https://celestial-oud-api.<subdomain>.workers.dev/readyz answers
 #   3. otherwise the in-browser mock (the site never breaks)
@@ -62,7 +62,10 @@ jobs:
               if curl -fsS --max-time 20 "$url/readyz" | grep -q ready; then ok=1; break; fi
               sleep 5
             done
-            if [ -z "$ok" ]; then
+            if [ -z "$ok" ] && [ -n "$VAR_URL" ]; then
+              # Explicitly configured (e.g. Render free, which may be asleep): keep it.
+              echo "::warning::API at $url did not answer /readyz yet — keeping it because VITE_API_URL is set."
+            elif [ -z "$ok" ]; then
               echo "::warning::API at $url did not answer /readyz — building with the in-browser mock instead."
               url=""
             fi

@@ -1,0 +1,41 @@
+# Render Blueprint — temporary test host for the Go API (backend/), while the
+# Cloudflare deployment (backend/cloudflare, .github/workflows/deploy-api.yml)
+# stays ready for production. Same Dockerfile, same code, same Supabase DB.
+#
+# Render dashboard → New → Blueprint → pick this repository. You will be asked
+# for DATABASE_URL only (Supabase transaction-pooler URI with the password).
+# See docs/DEPLOY.md.
+
+services:
+  - type: web
+    name: celestial-oud-api
+    runtime: docker
+    plan: free
+    region: frankfurt # closest Render region to the Supabase database (Paris, eu-west-3)
+    branch: frontend
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /readyz
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: DATABASE_URL
+        sync: false # prompted once in the dashboard; never committed
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CRON_SECRET
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      # Test environment: orders are marked paid without charging a card.
+      # Remove (or add STRIPE_SECRET_KEY) before taking real orders.
+      - key: PAYMENTS_MODE
+        value: mock
+      - key: PUBLIC_URL
+        value: https://brenod.github.io/Celestial-Oud
+      - key: CORS_ORIGINS
+        value: https://brenod.github.io
+      - key: EMAIL_FROM
+        value: Celestial Oud <noreply@celestialoud.co.uk>

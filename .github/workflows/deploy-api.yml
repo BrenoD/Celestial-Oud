@@ -7,7 +7,8 @@ name: Deploy API to Cloudflare
 #   Secrets (required): CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, DATABASE_URL, JWT_SECRET
 #   Secrets (optional): STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET,
 #                       RESEND_API_KEY, IDEAL_POSTCODES_KEY, CRON_SECRET
-#   Variables (optional, for the real domain later): PUBLIC_URL, API_URL, CORS_ORIGINS, ADMIN_EMAILS
+#   Variables (optional): PUBLIC_URL, API_URL, CORS_ORIGINS, ADMIN_EMAILS (real domain later),
+#                         PAYMENTS_MODE=mock (test without Stripe; otherwise checkout is disabled until Stripe is set)
 # Without the required secrets the workflow skips cleanly.
 
 on:
@@ -82,6 +83,7 @@ jobs:
           API_URL: ${{ steps.urls.outputs.api_url }}
           CORS_ORIGINS: ${{ vars.CORS_ORIGINS || 'https://brenod.github.io,https://celestialoud.co.uk,https://www.celestialoud.co.uk' }}
           ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS || '' }}
+          PAYMENTS_MODE: ${{ vars.PAYMENTS_MODE || '' }}
         run: |
           python3 - <<'EOF'
           import os, re
@@ -89,7 +91,7 @@ jobs:
           s = open(p).read()
           for k in ('PUBLIC_URL', 'API_URL', 'CORS_ORIGINS'):
               s = re.sub(rf'^{k} = ".*"$', f'{k} = "{os.environ[k]}"', s, flags=re.M)
-          s = s.replace('EMAIL_FROM = ', f'ADMIN_EMAILS = "{os.environ["ADMIN_EMAILS"]}"\nEMAIL_FROM = ', 1)
+          s = s.replace('EMAIL_FROM = ', f'ADMIN_EMAILS = "{os.environ["ADMIN_EMAILS"]}"\nPAYMENTS_MODE = "{os.environ["PAYMENTS_MODE"]}"\nEMAIL_FROM = ', 1)
           open(p, 'w').write(s)
           EOF
           sed -n '/^\[vars\]/,/^#/p' wrangler.toml

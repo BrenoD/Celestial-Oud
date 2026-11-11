@@ -25,6 +25,7 @@ export class ApiContainer extends Container<Env> {
     STRIPE_WEBHOOK_SECRET: this.env.STRIPE_WEBHOOK_SECRET ?? "",
     RESEND_API_KEY: this.env.RESEND_API_KEY ?? "",
     ADMIN_EMAILS: this.env.ADMIN_EMAILS ?? "",
+    PAYMENTS_MODE: this.env.PAYMENTS_MODE ?? "",
     CRON_SECRET: this.env.CRON_SECRET,
     IDEAL_POSTCODES_KEY: this.env.IDEAL_POSTCODES_KEY ?? "",
   };
@@ -45,6 +46,7 @@ interface Env {
   STRIPE_WEBHOOK_SECRET?: string;
   RESEND_API_KEY?: string;
   ADMIN_EMAILS?: string;
+  PAYMENTS_MODE?: string;
   CRON_SECRET: string;
   IDEAL_POSTCODES_KEY?: string;
 }

@@ -1,0 +1,39 @@
+name: API cron tick
+
+# Calls POST /internal/cron/tick every 10 minutes: applies/reverts scheduled
+# promotions, expires unpaid orders, sends back-in-stock emails, purges old
+# tokens. Needed on hosts without their own scheduler (Render free); on
+# Cloudflare the Worker's cron trigger does this instead.
+#
+# Requires: repository variable VITE_API_URL (the API base URL) and secret
+# CRON_SECRET (same value as the API's CRON_SECRET). Skips when either is missing.
+# Side effect on Render free: keeps the service from sleeping most of the time.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Tick
+        env:
+          API: ${{ vars.VITE_API_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$API" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::notice::Cron skipped — set variable VITE_API_URL and secret CRON_SECRET."
+            exit 0
+          fi
+          # Wake the service first (free hosts cold-start in ~30–60 s).
+          for i in $(seq 1 12); do
+            curl -fsS --max-time 20 "$API/healthz" >/dev/null && break
+            sleep 5
+          done
+          curl -fsS --max-time 60 -X POST "$API/internal/cron/tick" -H "X-Cron-Secret: $CRON_SECRET"

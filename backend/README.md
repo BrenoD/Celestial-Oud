@@ -13,7 +13,7 @@ go run ./cmd/api                # migrations run automatically → http://localh
 go test ./... && go vet ./...
 ```
 
-Without `STRIPE_SECRET_KEY` the checkout runs in **mock payment mode** (orders are marked paid at once);
+Without `STRIPE_SECRET_KEY` the checkout runs in **mock payment mode** in development (orders are marked paid at once); with `APP_ENV=production` it is refused unless `PAYMENTS_MODE=mock` is set explicitly;
 without `RESEND_API_KEY` emails are logged instead of sent. Point the storefront at it with
 `VITE_API_URL=http://localhost:8080`.
 

@@ -30,6 +30,13 @@ type Config struct {
 
 	CronSecret        string
 	IdealPostcodesKey string // optional UK address lookup provider
+
+	// PaymentsMode: "stripe" when STRIPE_SECRET_KEY is set; otherwise "mock"
+	// (orders are marked paid immediately — test environments only) or
+	// "disabled". Production without Stripe is "disabled" unless
+	// PAYMENTS_MODE=mock is set explicitly, so a live shop can never hand out
+	// free orders by accident.
+	PaymentsMode string
 }
 
 func Load() (Config, error) {
@@ -54,6 +61,14 @@ func Load() (Config, error) {
 
 		CronSecret:        os.Getenv("CRON_SECRET"),
 		IdealPostcodesKey: os.Getenv("IDEAL_POSTCODES_KEY"),
+	}
+	switch {
+	case c.StripeSecretKey != "":
+		c.PaymentsMode = "stripe"
+	case strings.EqualFold(os.Getenv("PAYMENTS_MODE"), "mock") || c.Env != "production":
+		c.PaymentsMode = "mock"
+	default:
+		c.PaymentsMode = "disabled"
 	}
 	if c.DatabaseURL == "" {
 		return c, fmt.Errorf("DATABASE_URL is required")

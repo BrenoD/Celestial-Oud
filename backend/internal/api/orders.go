@@ -24,6 +24,10 @@ type orderResponse struct {
 // create Stripe PaymentIntent → return clientSecret. Safe to retry with the
 // same Idempotency-Key: the stored response is replayed.
 func (a *API) createOrder(w http.ResponseWriter, r *http.Request) {
+	if a.cfg.PaymentsMode == "disabled" {
+		httpx.Fail(w, r, httpx.E(503, "payments_unavailable", "Checkout is temporarily unavailable. Please try again later."))
+		return
+	}
 	idem := strings.TrimSpace(r.Header.Get("Idempotency-Key"))
 	if idem == "" {
 		httpx.Fail(w, r, httpx.BadRequest("Idempotency-Key header is required."))
@@ -86,7 +90,8 @@ func (a *API) createOrder(w http.ResponseWriter, r *http.Request) {
 		_ = a.st.SetOrderIntent(r.Context(), order.ID, intent.ID)
 		res.Payment = intent
 	} else {
-		// No PSP configured: treat as paid so the flow is testable end-to-end.
+		// PaymentsMode "mock" (test environments): treat as paid so the flow is
+		// testable end-to-end. Never reached in production unless PAYMENTS_MODE=mock.
 		if paid, _, err := a.st.MarkPaid(r.Context(), order.ID); err == nil {
 			res.Order = paid
 			a.afterPaid(r, paid)

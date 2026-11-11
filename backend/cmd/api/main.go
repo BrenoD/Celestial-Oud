@@ -61,7 +61,7 @@ func main() {
 	}
 
 	go func() {
-		log.Info("listening", "port", cfg.Port, "env", cfg.Env, "stripe", cfg.StripeEnabled())
+		log.Info("listening", "port", cfg.Port, "env", cfg.Env, "payments", cfg.PaymentsMode)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error("server", "err", err)
 			os.Exit(1)
