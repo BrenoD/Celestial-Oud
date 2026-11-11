@@ -50,6 +50,18 @@ jobs:
             echo "::add-mask::$clean"
             echo "$name=$clean" >> "$GITHUB_ENV"
           done
+      - name: Verify Cloudflare token
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        working-directory: .
+        run: |
+          # Prints only the token's public prefix and length, never the value.
+          echo "token: ${CLOUDFLARE_API_TOKEN:0:5}… (${#CLOUDFLARE_API_TOKEN} chars), account id: ${#CLOUDFLARE_ACCOUNT_ID} chars"
+          curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" https://api.cloudflare.com/client/v4/user/tokens/verify \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); print("verify:", d.get("success"), (d.get("result") or {}).get("status"), d.get("errors")); sys.exit(0 if d.get("success") else 1)' \
+            || { echo "::error::Cloudflare rejected CLOUDFLARE_API_TOKEN. Use the API token (My Profile → API Tokens → your token → Roll), not the Global API Key."; exit 1; }
+          curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID" \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); print("account:", d.get("success"), d.get("errors")); sys.exit(0 if d.get("success") else 1)' \
+            || { echo "::error::Token is valid but cannot read CLOUDFLARE_ACCOUNT_ID — check the account ID and that the token includes this account."; exit 1; }
       - name: Check configuration
         id: cfg
         working-directory: .
