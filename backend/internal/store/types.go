@@ -240,9 +240,9 @@ type Order struct {
 }
 
 type CreateOrderInput struct {
-	Email            string  `json:"email"`
-	MarketingOptIn   bool    `json:"marketingOptIn"`
-	Lines            []struct {
+	Email          string `json:"email"`
+	MarketingOptIn bool   `json:"marketingOptIn"`
+	Lines          []struct {
 		SKU string `json:"sku"`
 		Qty int    `json:"qty"`
 	} `json:"lines"`

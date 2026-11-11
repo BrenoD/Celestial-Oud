@@ -33,11 +33,14 @@ CORS_ORIGINS = "https://celestialoud.co.uk,https://www.celestialoud.co.uk,https:
 EMAIL_FROM = "Celestial Oud <noreply@celestialoud.co.uk>"
 
 # Container env is set from Worker secrets at start (see src/index.ts):
-#   DATABASE_URL (Supabase pooler URL, or a Hyperdrive connection string)
+#   DATABASE_URL — Supabase project bualtfdrfvsnnydwtmgz, West EU (Paris, eu-west-3):
+#     postgresql://postgres.bualtfdrfvsnnydwtmgz:<password>@aws-1-eu-west-3.pooler.supabase.com:6543/postgres
+#     (Transaction pooler. Nano plan = 60 direct connections; the pooler multiplexes all instances.)
 #   JWT_SECRET, STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET,
 #   RESEND_API_KEY, ADMIN_EMAILS, CRON_SECRET, IDEAL_POSTCODES_KEY
 #
-# Optional: Hyperdrive pooling in front of Supabase
+# Optional: Hyperdrive in front of Supabase. Point Hyperdrive at the *session* pooler
+# (same host, port 5432) — not at 6543 — and the API uses its connectionString instead.
 # [[hyperdrive]]
 # binding = "HYPERDRIVE"
 # id = "<hyperdrive-id>"

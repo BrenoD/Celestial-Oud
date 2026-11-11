@@ -17,6 +17,17 @@ Without `STRIPE_SECRET_KEY` the checkout runs in **mock payment mode** (orders a
 without `RESEND_API_KEY` emails are logged instead of sent. Point the storefront at it with
 `VITE_API_URL=http://localhost:8080`.
 
+### Supabase (production database)
+
+Project `bualtfdrfvsnnydwtmgz`, region **West EU (Paris, eu-west-3)**, plan Nano (60 direct connections).
+Use the **Transaction pooler** URI from *Project Overview → Get connected → Direct → Connection string*:
+`postgresql://postgres.bualtfdrfvsnnydwtmgz:<password>@aws-1-eu-west-3.pooler.supabase.com:6543/postgres`.
+The API detects the pooler and switches pgx to unnamed statements (`QueryExecModeDescribeExec`, no
+statement cache); migrations use transaction-scoped advisory locks, so any number of instances can boot at
+once (tested with 4 concurrent boots × 5 rounds). The first boot creates every table; nothing has to be run in
+the Supabase SQL editor. The publishable/anon key and Supabase Auth are **not** used — the API talks to Postgres
+directly and issues its own JWTs.
+
 First admin: register a user through the storefront, then
 `update users set role = 'admin' where email = '<you>';` — further staff are invited from the admin UI.
 

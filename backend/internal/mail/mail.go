@@ -122,8 +122,10 @@ func Layout(title, body, siteURL string) string {
 </table></td></tr></table></body></html>`
 }
 
-func h1(s string) string { return `<h1 style="margin:0 0 12px;font-family:Georgia,serif;font-size:26px">` + html.EscapeString(s) + `</h1>` }
-func p(s string) string  { return `<p style="margin:12px 0;color:#5A4334">` + s + `</p>` }
+func h1(s string) string {
+	return `<h1 style="margin:0 0 12px;font-family:Georgia,serif;font-size:26px">` + html.EscapeString(s) + `</h1>`
+}
+func p(s string) string { return `<p style="margin:12px 0;color:#5A4334">` + s + `</p>` }
 func btn(label, url string) string {
 	return `<a href="` + url + `" style="display:inline-block;margin-top:16px;padding:14px 24px;background:#2E1D15;color:#FFFFFF;border-radius:4px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:13px;text-decoration:none">` + html.EscapeString(label) + `</a>`
 }

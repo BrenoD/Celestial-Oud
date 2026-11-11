@@ -275,16 +275,16 @@ func (s *Store) ListAudit(ctx context.Context, limit int) ([]map[string]any, err
 // ── Analytics ────────────────────────────────────────────────────────────────
 
 type Dashboard struct {
-	TotalRevenue    int              `json:"totalRevenue"`
-	TotalOrders     int              `json:"totalOrders"`
-	TotalCustomers  int              `json:"totalCustomers"`
-	PendingOrders   int              `json:"pendingOrders"`
-	PendingReviews  int              `json:"pendingReviews"`
-	OpenMessages    int              `json:"openMessages"`
-	LowStock        []map[string]any `json:"lowStock"`
-	RecentOrders    []Order          `json:"recentOrders"`
-	RevenueByDay    []DayPoint       `json:"revenueByDay"`
-	TopProducts     []map[string]any `json:"topProducts"`
+	TotalRevenue   int              `json:"totalRevenue"`
+	TotalOrders    int              `json:"totalOrders"`
+	TotalCustomers int              `json:"totalCustomers"`
+	PendingOrders  int              `json:"pendingOrders"`
+	PendingReviews int              `json:"pendingReviews"`
+	OpenMessages   int              `json:"openMessages"`
+	LowStock       []map[string]any `json:"lowStock"`
+	RecentOrders   []Order          `json:"recentOrders"`
+	RevenueByDay   []DayPoint       `json:"revenueByDay"`
+	TopProducts    []map[string]any `json:"topProducts"`
 }
 
 type DayPoint struct {

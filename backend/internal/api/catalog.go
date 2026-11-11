@@ -208,10 +208,10 @@ func (a *API) lookupPostcode(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
 		Result []struct {
 			Line1, Line2, PostTown, Postcode string `json:",omitempty"`
-			L1                                 string `json:"line_1"`
-			L2                                 string `json:"line_2"`
-			Town                               string `json:"post_town"`
-			PC                                 string `json:"postcode"`
+			L1                               string `json:"line_1"`
+			L2                               string `json:"line_2"`
+			Town                             string `json:"post_town"`
+			PC                               string `json:"postcode"`
 		} `json:"result"`
 	}
 	_ = json.NewDecoder(res.Body).Decode(&payload)

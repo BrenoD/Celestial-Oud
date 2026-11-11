@@ -28,7 +28,7 @@ type Config struct {
 	EmailFrom    string
 	AdminEmails  []string
 
-	CronSecret       string
+	CronSecret        string
 	IdealPostcodesKey string // optional UK address lookup provider
 }
 
@@ -70,7 +70,7 @@ func Load() (Config, error) {
 	return c, nil
 }
 
-func (c Config) IsProd() bool       { return c.Env == "production" }
+func (c Config) IsProd() bool        { return c.Env == "production" }
 func (c Config) StripeEnabled() bool { return c.StripeSecretKey != "" }
 
 func get(k, def string) string {
