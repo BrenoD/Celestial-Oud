@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCreateOrder, useDeliveryMethods, usePostcodeLookup } from '@/api/hooks';
 import { selectSubtotal, useBasketStore } from '@/store/basket';
 import { useAuthStore } from '@/store/auth';
+import { rememberOrderToken } from '@/lib/orderAccess';
 import { Seo } from '@/components/ui/Seo';
 import { formatPence } from '@/lib/money';
 import { config } from '@/config';
@@ -185,6 +186,7 @@ export default function Checkout() {
       {
         onSuccess: (order) => {
           basket.clear();
+          if (order.accessToken) rememberOrderToken(order.id, order.accessToken);
           navigate(`/checkout/confirmed/${order.id}`, { replace: true, state: { order } });
         },
       },

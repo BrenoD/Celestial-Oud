@@ -19,9 +19,9 @@
   --danger: #9b2c2c;
   --success: #2f6b3a;
 
-  --font-ui: Jost, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-wordmark: Cinzel, Georgia, serif;
+  --font-ui: Jost, 'Jost Fallback', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Cormorant Garamond', 'Cormorant Garamond Fallback', Georgia, serif;
+  --font-wordmark: Cinzel, 'Cinzel Fallback', Georgia, serif;
 
   --container: 1320px;
   --container-narrow: 1120px;

@@ -5,6 +5,8 @@
 }
 #main {
   flex: 1;
+  /* Keeps the footer below the fold while page data loads, so it never jumps (CLS). */
+  min-height: 100vh;
 }
 .skip-link {
   position: absolute;

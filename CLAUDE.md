@@ -26,7 +26,8 @@ npm run dev | build | test | lint | typecheck
 ```
 - Money is integer pence everywhere; format with `lib/money.ts`.
 - Pages fetch through `api/hooks.ts` only; swap mock ↔ real API via `VITE_API_URL`.
-- Keep routes lazy (`App.tsx`) and avoid defining components inside components (remounts inputs).
+- Storefront pages are imported eagerly in `App.tsx` (no lazy round trip before LCP); keep the admin lazy. Never define components inside components (remounts inputs and drops focus) — use a plain render function instead.
+- Lighthouse target is 100 in all four categories on mobile: self-hosted fonts with metric-matched fallbacks (`styles/fonts.css`), no third-party requests, reserve space for late content (no CLS).
 - Run the build before committing; CI runs typecheck, lint, vitest and a Docker smoke test.
 
 ## Working on the backend

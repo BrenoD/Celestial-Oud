@@ -271,6 +271,12 @@ export const api: StoreApi = {
   async subscribeNewsletter() {
     await latency();
   },
+  async confirmNewsletter() {
+    await latency();
+  },
+  async unsubscribeNewsletter() {
+    await latency();
+  },
   async contact() {
     await latency();
   },

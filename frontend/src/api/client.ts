@@ -63,10 +63,11 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
         headers,
         body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
         signal: controller.signal,
-        credentials: 'omit',
+        // The refresh cookie is only ever needed by /v1/auth/*.
+        credentials: path.startsWith('/v1/auth/') ? 'include' : 'omit',
       });
 
-      if (res.status === 401 && !opts._authRetried) {
+      if (res.status === 401 && !opts._authRetried && !path.startsWith('/v1/auth/') && useAuthStore.getState().user) {
         const refreshed = await tryRefresh();
         if (refreshed) {
           return request<T>(path, { ...opts, _authRetried: true });
@@ -101,20 +102,15 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
   }
 }
 
-// Exchange the refresh token once; returns false when the session is gone.
+// Exchange the HttpOnly refresh cookie for a new access token (once at a time).
 let refreshing: Promise<boolean> | null = null;
-async function tryRefresh(): Promise<boolean> {
-  const { refreshToken, setTokens } = useAuthStore.getState();
-  if (!refreshToken || !config.apiUrl) return false;
-  refreshing ??= fetch(`${config.apiUrl}/v1/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-  })
+export function tryRefresh(): Promise<boolean> {
+  if (!config.apiUrl || !useAuthStore.getState().user) return Promise.resolve(false);
+  refreshing ??= fetch(`${config.apiUrl}/v1/auth/refresh`, { method: 'POST', credentials: 'include' })
     .then(async (r) => {
       if (!r.ok) return false;
-      const data = (await r.json()) as { token: string; refreshToken?: string };
-      setTokens(data.token, data.refreshToken ?? null);
+      const data = (await r.json()) as { token: string; user?: import('@/types').User };
+      useAuthStore.getState().setToken(data.token, data.user);
       return true;
     })
     .catch(() => false)
@@ -122,6 +118,21 @@ async function tryRefresh(): Promise<boolean> {
       refreshing = null;
     });
   return refreshing;
+}
+
+/** On load: a remembered profile without a token means "restore the session". */
+export async function restoreSession(): Promise<void> {
+  const { user, token, signOut } = useAuthStore.getState();
+  if (!user || token || !config.apiUrl) return;
+  if (!(await tryRefresh())) signOut();
+}
+
+/** Revoke the refresh cookie server-side, then forget the session locally. */
+export async function logout(): Promise<void> {
+  if (config.apiUrl) {
+    await fetch(`${config.apiUrl}/v1/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => undefined);
+  }
+  useAuthStore.getState().signOut();
 }
 
 export function qs(params: Record<string, unknown>): string {

@@ -16,7 +16,8 @@ export default function Help() {
   const submitTrack = (e: FormEvent) => {
     e.preventDefault();
     const id = track.order.trim().replace(/^#/, '').toUpperCase();
-    if (id) navigate(`/checkout/confirmed/${id}`);
+    // The email goes in navigation state, not the URL (no personal data in logs or history).
+    if (id) navigate(`/checkout/confirmed/${encodeURIComponent(id)}`, { state: { email: track.email.trim() } });
   };
   const submitContact = (e: FormEvent) => {
     e.preventDefault();

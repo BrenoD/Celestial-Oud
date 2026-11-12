@@ -1,4 +1,5 @@
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { orderToken } from '@/lib/orderAccess';
 import { useOrder } from '@/api/hooks';
 import { useAuthStore } from '@/store/auth';
 import { Seo } from '@/components/ui/Seo';
@@ -11,8 +12,11 @@ import './Confirmation.css';
 export default function Confirmation() {
   const { id = '' } = useParams();
   const location = useLocation();
-  const fromState = (location.state as { order?: Order } | null)?.order;
-  const q = useOrder(id);
+  const [params] = useSearchParams();
+  const state = location.state as { order?: Order; email?: string } | null;
+  const fromState = state?.order;
+  // Token from the email link or this tab's checkout; email from the track form (kept out of the URL).
+  const q = useOrder(id, { token: params.get('token') ?? orderToken(id), email: state?.email });
   const user = useAuthStore((s) => s.user);
   const order = fromState?.id === id ? fromState : q.data;
 
@@ -48,8 +52,8 @@ export default function Confirmation() {
       </p>
 
       <div className="card confirm__box">
-        {order.lines.map((l) => (
-          <div key={l.sku} className="confirm__line">
+        {order.lines.map((l, i) => (
+          <div key={`${l.sku}-${i}`} className="confirm__line">
             <span className="confirm__thumb">
               <ProductImage src={l.image} width={64} height={64} className="pimg--mini" />
             </span>

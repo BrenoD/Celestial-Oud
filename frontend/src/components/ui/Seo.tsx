@@ -1,18 +1,23 @@
 import { useEffect } from 'react';
 
+function meta(name: string): HTMLMetaElement {
+  let m = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+  if (!m) {
+    m = document.createElement('meta');
+    m.name = name;
+    document.head.appendChild(m);
+  }
+  return m;
+}
+
 /** Minimal head management — enough for a SPA behind a CDN. */
-export function Seo({ title, description }: { title: string; description?: string }) {
+export function Seo({ title, description, noindex }: { title: string; description?: string; noindex?: boolean }) {
   useEffect(() => {
     document.title = title ? `${title} — Celestial Oud` : 'Celestial Oud';
-    if (description) {
-      let m = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-      if (!m) {
-        m = document.createElement('meta');
-        m.name = 'description';
-        document.head.appendChild(m);
-      }
-      m.content = description;
-    }
-  }, [title, description]);
+    if (description) meta('description').content = description;
+    // Token landing pages (email links) must not be indexed.
+    if (noindex) meta('robots').content = 'noindex';
+    else document.querySelector('meta[name="robots"]')?.remove();
+  }, [title, description, noindex]);
   return null;
 }

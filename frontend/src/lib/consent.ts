@@ -18,3 +18,10 @@ export function setConsent(c: Consent) {
   }
   window.dispatchEvent(new CustomEvent('co:consent', { detail: c }));
 }
+
+export const COOKIE_SETTINGS_EVENT = 'co:cookie-settings';
+
+/** Reopens the cookie banner so the visitor can change their choice. */
+export function openCookieSettings() {
+  window.dispatchEvent(new Event(COOKIE_SETTINGS_EVENT));
+}

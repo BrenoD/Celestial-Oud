@@ -90,6 +90,25 @@ Defaults need no repository variables. Overrides: `SITE_API_URL` (storefront bui
 
 GitHub Pages + Render stay up as the preview/fallback environment until they are switched off.
 
+## Security model (what the configuration must keep)
+
+- **Sessions:** 15-minute access JWT kept in memory by the SPA; the 30-day rotating refresh token is an
+  `HttpOnly; Secure; SameSite=Strict` cookie scoped to `/v1/auth` (`__Secure-co_rt`). Refresh/logout also
+  require an allowed `Origin`. Reusing a rotated token revokes the whole family. Password change signs out
+  every other device. Staff roles are re-read from the database on every admin request.
+- **Rate limits:** per route and per email, stored in Postgres (`rate_limits`) so every instance shares them
+  (login 10/15 min per IP and lockout after 5 wrong passwords per email; register 5/h; forgot 5/h per IP and
+  3/h per email; orders 10/10 min per IP and 5/10 min per email; order lookups 30/10 min; contact/newsletter
+  5/h; …). The Worker adds edge limits (300 req/min per IP, 20/min on `/v1/auth/*`).
+- **Client IP:** only from a trusted proxy: `TRUST_PROXY=cloudflare` (set by the Worker),
+  `xff-last` on Render, unset elsewhere (TCP peer). Never trust a header the client controls.
+- **Guest orders:** viewable only with the secret `accessToken` returned at checkout (also in the
+  confirmation email link) or with the order email; everyone else gets 404.
+- **Storefront headers:** strict CSP (`frontend/public/_headers`, `nginx-security.conf`): our own
+  scripts, styles and fonts only; network only to the API and Stripe.
+- **Test hosts:** never set `PAYMENTS_MODE=mock` on a host that shares the production database.
+  Render needs `TRUST_PROXY=xff-last` and `COOKIE_SAMESITE=None` (cross-site preview).
+
 ## Caching & load
 
 Public catalogue responses carry `Cache-Control: public, max-age=0, must-revalidate, s-maxage=N`: the Worker

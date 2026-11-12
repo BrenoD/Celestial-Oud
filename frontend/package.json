@@ -17,10 +17,13 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@fontsource/cinzel": "5.2.8",
+    "@fontsource/cormorant-garamond": "5.2.11",
+    "@fontsource/jost": "5.2.8",
     "@tanstack/react-query": "^5.59.16",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0",
+    "react-router-dom": "7.18.5",
     "zustand": "^5.0.1"
   },
   "devDependencies": {

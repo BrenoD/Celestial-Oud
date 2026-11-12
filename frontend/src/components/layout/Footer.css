@@ -59,6 +59,20 @@
   flex-wrap: wrap;
   gap: 16px;
 }
-.ftr__links a {
+.ftr__links a,
+.ftr__links .ftr__linkbtn {
   color: var(--muted);
+}
+
+.ftr__linkbtn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: inherit;
+  cursor: pointer;
+}
+.ftr__linkbtn:hover {
+  text-decoration: underline;
 }

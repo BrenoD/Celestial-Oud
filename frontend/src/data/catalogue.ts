@@ -295,8 +295,8 @@ export const faqs: Faq[] = [
 
 /** Free samples offered in the basket. */
 export const freeSamples = [
-  { sku: 'sample-amber-noir', name: 'Amber Noir' },
-  { sku: 'sample-celestial-musk', name: 'Celestial Musk' },
-  { sku: 'sample-saffron-night', name: 'Saffron Night' },
-  { sku: 'sample-rose-oud', name: 'Rose Oud' },
+  { sku: 'amber-noir-2ml', name: 'Amber Noir' },
+  { sku: 'celestial-musk-2ml', name: 'Celestial Musk' },
+  { sku: 'saffron-night-2ml', name: 'Saffron Night' },
+  { sku: 'rose-oud-2ml', name: 'Rose Oud' },
 ];

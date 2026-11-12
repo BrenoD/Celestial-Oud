@@ -181,6 +181,14 @@ export interface Order {
   giftWrap?: boolean;
   giftMessage?: string;
   notes?: string;
+  /** Returned once, when the order is created: the guest's key to view it later. */
+  accessToken?: string;
+}
+
+/** How a guest proves they may see an order: the access token or the order email. */
+export interface OrderAccess {
+  token?: string | null;
+  email?: string | null;
 }
 
 /* ---------- Account ---------- */

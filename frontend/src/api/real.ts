@@ -15,11 +15,14 @@ export const api: StoreApi = {
   validateDiscount: (code, subtotal) => request('/v1/discounts/validate', { method: 'POST', body: { code, subtotal } }),
   createOrder: (req, idempotencyKey) =>
     request('/v1/orders', { method: 'POST', body: req, headers: { 'Idempotency-Key': idempotencyKey }, timeoutMs: 20_000 }),
-  getOrder: (id, email) => request(`/v1/orders/${encodeURIComponent(id)}${qs({ email })}`),
+  getOrder: (id, access) =>
+    request(`/v1/orders/${encodeURIComponent(id)}${qs({ token: access?.token ?? undefined, email: access?.email ?? undefined })}`, { retries: 0 }),
   listOrders: () => request('/v1/account/orders'),
   signIn: (email, password) => request('/v1/auth/login', { method: 'POST', body: { email, password } }),
   register: (input) => request('/v1/auth/register', { method: 'POST', body: input }),
   subscribeNewsletter: (email) => request('/v1/newsletter', { method: 'POST', body: { email, source: 'footer' } }),
+  confirmNewsletter: (token) => request('/v1/newsletter/confirm', { method: 'POST', body: { token } }),
+  unsubscribeNewsletter: (token) => request('/v1/newsletter/unsubscribe', { method: 'POST', body: { token } }),
   contact: (input) => request('/v1/contact', { method: 'POST', body: input }),
   listFaqs: () => request('/v1/content/faqs'),
 };

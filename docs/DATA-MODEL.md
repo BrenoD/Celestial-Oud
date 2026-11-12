@@ -16,11 +16,12 @@ Migrations live in `backend/internal/db/migrations/` (embedded in the binary and
 | printforge | Celestial | DB? | Schedule? | FK reuse |
 |---|---|---|---|---|
 | `users` (Supabase Auth + profile) | `users` — own auth: `password_hash`, `email_verified_at`, `role` (`customer`,`viewer`,`support`,`manager`,`admin`), marketing prefs (email/sms/whatsapp), loyalty `tier`/`points` | yes | plain | **target** of addresses, orders (set null), product_reviews (set null), wishlist, recently_viewed, scent_profiles, refresh_tokens, password_resets, store_credits, loyalty_redemptions, audit_log |
-| Supabase session | `refresh_tokens` (hashed, rotating) | yes | **schedule** — `expires_at`, purged by cron | → users (cascade) |
+| Supabase session | `refresh_tokens` (hashed, rotating, `family_id` for replay detection; sent only as an HttpOnly cookie) | yes | **schedule** — `expires_at`, purged by cron | → users (cascade) |
 | Supabase reset link | `password_resets` (hashed token) | yes | **schedule** — `expires_at`, single use | → users (cascade) |
 | `addresses` | `addresses` | yes | plain | → users (cascade). Orders **snapshot** the address as jsonb instead of FK so history survives edits |
 | staff list (`users.role`) | same; no separate table | — | — | — |
-| — | `audit_log` (who changed what in admin) | yes | plain, append-only | → users (set null) |
+| — | `audit_log` (who changed what in admin — every admin write) | yes | plain, append-only | → users (set null) |
+| in-memory limiter | `rate_limits` (key = rule + hashed subject, fixed window) — shared by all API instances; also holds login lockouts | yes (UNLOGGED) | **schedule** — windows reset on use, purged daily | — |
 
 ## Catalogue
 
@@ -79,7 +80,7 @@ A Cloudflare **Cron Trigger** calls `POST /internal/cron/tick` (secret header) e
 1. applies / reverts `scheduled_promotions` whose window opened or closed;
 2. expires `store_credits`, purges `idempotency_keys`, `refresh_tokens`, `password_resets` past expiry;
 3. sends queued `stock_notifications` for sizes back in stock;
-4. flips `orders.status` `pending_payment` → `cancelled` after 24 h without a successful PaymentIntent.
+4. after 1 h unpaid, cancels the order's Stripe PaymentIntent (or marks it paid if it succeeded meanwhile), then flips `pending_payment` → `cancelled`, restocking lines and giving back the discount use.
 
 ## Admin sections → tables (printforge parity)
 

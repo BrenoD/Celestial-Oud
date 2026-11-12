@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
+import { logout } from '@/api/client';
 import { useMockApi } from '@/config';
 import { Logo } from '@/components/layout/Logo';
 import { Seo } from '@/components/ui/Seo';
@@ -77,7 +78,7 @@ function Gate() {
 
 export default function AdminLayout() {
   const { section = 'dashboard' } = useParams();
-  const { user, signOut } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   if (!isStaff(user?.role)) return <Gate />;
 
@@ -105,7 +106,7 @@ export default function AdminLayout() {
             <Link to="/" className="btn btn--outline btn--xs">
               View store
             </Link>
-            <button type="button" className="btn btn--outline btn--xs" onClick={() => { signOut(); navigate('/'); }}>
+            <button type="button" className="btn btn--outline btn--xs" onClick={() => { void logout().then(() => navigate('/')); }}>
               Sign out
             </button>
             </span>

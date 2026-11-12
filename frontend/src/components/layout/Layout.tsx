@@ -1,9 +1,10 @@
-import { Suspense } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Suspense, useState } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useBasketStore } from '@/store/basket';
+import { CookieBanner } from './CookieBanner';
 import { AnnouncementBar } from './AnnouncementBar';
 import { Header } from './Header';
 import { Footer } from './Footer';
-import { CookieBanner } from './CookieBanner';
 import { AddedToast } from './AddedToast';
 import { Logo } from './Logo';
 import { LockIcon } from '@/components/ui/Icons';
@@ -35,7 +36,6 @@ export function StoreLayout() {
       </div>
       <Footer />
       <AddedToast />
-      <CookieBanner />
     </div>
   );
 }
@@ -43,6 +43,11 @@ export function StoreLayout() {
 /** Distraction-free checkout shell. */
 export function CheckoutLayout() {
   const { pathname } = useLocation();
+  // Decided once, before anything paints: arriving at checkout with an empty
+  // basket never shows the checkout shell (no flash, no layout shift). Later
+  // changes (the basket clears after a successful order) are left to the page.
+  const [arrivedEmpty] = useState(() => useBasketStore.getState().lines.length === 0);
+  if (arrivedEmpty && pathname.replace(/\/$/, '').endsWith('/checkout')) return <Navigate to="/basket" replace />;
   return (
     <div className="shell">
       <ScrollToTop />
@@ -60,5 +65,19 @@ export function CheckoutLayout() {
         </Suspense>
       </div>
     </div>
+  );
+}
+
+/**
+ * Root of every route. The cookie banner lives here, above the store,
+ * checkout and admin shells, so it stays mounted (no repaint or layout shift)
+ * when navigation moves between them.
+ */
+export function RootLayout() {
+  return (
+    <>
+      <Outlet />
+      <CookieBanner />
+    </>
   );
 }

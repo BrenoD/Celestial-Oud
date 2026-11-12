@@ -11,6 +11,23 @@ const WEAR = ['day', 'evening', 'summer', 'winter'];
 const TAGS = ['bestseller', 'new', 'top-rated', 'gift', 'set', 'offer', 'oud'];
 const list = (s: string) => s.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
 
+/**
+ * Comma/line separated list field. Keeps the raw text while typing (so commas
+ * and spaces survive) and reports the parsed list upwards.
+ */
+function ListInput({ value, onChange, placeholder, multiline }: { value: string[]; onChange: (v: string[]) => void; placeholder?: string; multiline?: boolean }) {
+  const [raw, setRaw] = useState(() => value.join(multiline ? '\n' : ', '));
+  const update = (text: string) => {
+    setRaw(text);
+    onChange(list(text));
+  };
+  return multiline ? (
+    <textarea className="textarea" rows={2} value={raw} placeholder={placeholder} onChange={(e) => update(e.target.value)} />
+  ) : (
+    <input className="input" value={raw} placeholder={placeholder} onChange={(e) => update(e.target.value)} />
+  );
+}
+
 const empty = (): ProductInput => ({
   name: '', tagline: '', notesLine: '', badge: '', tags: [], family: 'woody-oud', concentration: 'Eau de Parfum', wear: [], images: [],
   pyramid: { top: [], heart: [], base: [] }, profile: { intensity: 50, longevity: 50, sweetness: 50, freshness: 50 }, bestFor: '', description: '',
@@ -51,7 +68,9 @@ function Editor({ initial, id, onDone }: { initial: ProductInput; id: number | n
     }
   };
 
-  const Text = ({ k, label, span, ph }: { k: keyof ProductInput; label: string; span?: boolean; ph?: string }) => (
+  // A plain function, not a component: a component defined here would be a new
+  // type on every render, remounting the input and dropping focus per keystroke.
+  const text = ({ k, label, span, ph }: { k: keyof ProductInput; label: string; span?: boolean; ph?: string }) => (
     <label className={`field${span ? ' span-all' : ''}`}>
       {label}
       <input className="input" value={String(f[k] ?? '')} placeholder={ph} onChange={(e) => set(k, e.target.value as never)} />
@@ -60,11 +79,11 @@ function Editor({ initial, id, onDone }: { initial: ProductInput; id: number | n
 
   return (
     <form onSubmit={submit} style={{ display: 'contents' }}>
-      <Text k="name" label="Name" />
-      <Text k="slug" label="Slug (URL)" ph="auto from name" />
-      <Text k="tagline" label="Tagline" span />
-      <Text k="notesLine" label="Notes line (card)" ph="Oud · Saffron · Rose" />
-      <Text k="badge" label="Badge" ph="Bestseller / New / Gift" />
+      {text({ k: 'name', label: 'Name' })}
+      {text({ k: 'slug', label: 'Slug (URL)', ph: 'auto from name' })}
+      {text({ k: 'tagline', label: 'Tagline', span: true })}
+      {text({ k: 'notesLine', label: 'Notes line (card)', ph: 'Oud · Saffron · Rose' })}
+      {text({ k: 'badge', label: 'Badge', ph: 'Bestseller / New / Gift' })}
       <label className="field">
         Scent family
         <select className="select" value={f.family} onChange={(e) => set('family', e.target.value)}>
@@ -124,11 +143,11 @@ function Editor({ initial, id, onDone }: { initial: ProductInput; id: number | n
         <span className="form-hint">Prices in pence (5500 = £55.00). Leave “Was” empty unless on offer.</span>
       </div>
 
-      <label className="field">Key notes (filters)<input className="input" value={f.keyNotes.join(', ')} onChange={(e) => set('keyNotes', list(e.target.value))} placeholder="oud, saffron, rose" /></label>
+      <label className="field">Key notes (filters)<ListInput value={f.keyNotes} onChange={(v) => set('keyNotes', v)} placeholder="oud, saffron, rose" /></label>
       <label className="field">Best for<input className="input" value={f.bestFor} onChange={(e) => set('bestFor', e.target.value)} /></label>
-      <label className="field">Top notes<input className="input" value={f.pyramid.top.join(', ')} onChange={(e) => set('pyramid', { ...f.pyramid, top: list(e.target.value) })} /></label>
-      <label className="field">Heart notes<input className="input" value={f.pyramid.heart.join(', ')} onChange={(e) => set('pyramid', { ...f.pyramid, heart: list(e.target.value) })} /></label>
-      <label className="field span-all">Base notes<input className="input" value={f.pyramid.base.join(', ')} onChange={(e) => set('pyramid', { ...f.pyramid, base: list(e.target.value) })} /></label>
+      <label className="field">Top notes<ListInput value={f.pyramid.top} onChange={(v) => set('pyramid', { ...f.pyramid, top: v })} /></label>
+      <label className="field">Heart notes<ListInput value={f.pyramid.heart} onChange={(v) => set('pyramid', { ...f.pyramid, heart: v })} /></label>
+      <label className="field span-all">Base notes<ListInput value={f.pyramid.base} onChange={(v) => set('pyramid', { ...f.pyramid, base: v })} /></label>
       {(['intensity', 'longevity', 'sweetness', 'freshness'] as const).map((k) => (
         <label key={k} className="field">
           {k[0].toUpperCase() + k.slice(1)}: {f.profile[k]}
@@ -138,11 +157,11 @@ function Editor({ initial, id, onDone }: { initial: ProductInput; id: number | n
       <label className="field span-all">Description<textarea className="textarea" rows={4} value={f.description} onChange={(e) => set('description', e.target.value)} /></label>
       <label className="field span-all">How to wear<textarea className="textarea" rows={2} value={f.howToWear} onChange={(e) => set('howToWear', e.target.value)} /></label>
       <label className="field span-all">Ingredients (INCI) — required by UK cosmetics law<textarea className="textarea" rows={3} value={f.ingredients} onChange={(e) => set('ingredients', e.target.value)} /></label>
-      <label className="field">Allergens<input className="input" value={f.allergens.join(', ')} onChange={(e) => set('allergens', list(e.target.value))} placeholder="Linalool, Limonene" /></label>
-      <Text k="responsiblePerson" label="Responsible Person" />
-      <Text k="cpsrRef" label="CPSR reference" />
-      <Text k="scpnRef" label="SCPN notification" />
-      <label className="field span-all">Image URLs (one per line)<textarea className="textarea" rows={2} value={f.images.join('\n')} onChange={(e) => set('images', list(e.target.value))} /></label>
+      <label className="field">Allergens<ListInput value={f.allergens} onChange={(v) => set('allergens', v)} placeholder="Linalool, Limonene" /></label>
+      {text({ k: 'responsiblePerson', label: 'Responsible Person' })}
+      {text({ k: 'cpsrRef', label: 'CPSR reference' })}
+      {text({ k: 'scpnRef', label: 'SCPN notification' })}
+      <label className="field span-all">Image URLs (one per line)<ListInput value={f.images} onChange={(v) => set('images', v)} multiline /></label>
       <div className="form-actions span-all">
         <button type="submit" className="btn btn--primary btn--sm" disabled={busy}>{busy ? 'Saving…' : 'Save product'}</button>
         <button type="button" className="btn btn--outline btn--sm" onClick={onDone}>Cancel</button>

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useOrders, useRegister, useSignIn } from '@/api/hooks';
 import { useAuthStore } from '@/store/auth';
+import { logout } from '@/api/client';
 import { useWishlistStore } from '@/store/wishlist';
 import { Seo } from '@/components/ui/Seo';
 import { formatPence } from '@/lib/money';
@@ -44,8 +45,8 @@ function SignIn() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const onSuccess = (r: { token: string; refreshToken?: string; user: Parameters<typeof signInStore>[1] }) => {
-      signInStore(r.token, r.user, r.refreshToken ?? null);
+    const onSuccess = (r: { token: string; user: Parameters<typeof signInStore>[1] }) => {
+      signInStore(r.token, r.user);
       navigate(next, { replace: true });
     };
     if (mode === 'signin') signIn.mutate({ email, password }, { onSuccess });
@@ -129,7 +130,7 @@ function SignIn() {
 function Dashboard() {
   const { tab = 'orders' } = useParams<{ tab: TabId }>();
   const navigate = useNavigate();
-  const { user, signOut } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const orders = useOrders(tab === 'orders');
   const wishlist = useWishlistStore((s) => s.slugs);
   const current = TABS.find((t) => t.id === tab) ?? TABS[0];
@@ -151,7 +152,7 @@ function Dashboard() {
           type="button"
           className="acct__tab acct__tab--out"
           onClick={() => {
-            signOut();
+            void logout();
             navigate('/');
           }}
         >
@@ -249,14 +250,16 @@ function Dashboard() {
 }
 
 export default function Account() {
-  const token = useAuthStore((s) => s.token);
+  // A remembered profile means signed in (the access token is restored from
+  // the HttpOnly cookie in the background; API calls wait for it).
+  const user = useAuthStore((s) => s.user);
   return (
     <main className="container container--narrow page">
       <Seo title="My account" />
       <nav aria-label="Breadcrumb" className="breadcrumb">
         <Link to="/">Home</Link> › <span>My account</span>
       </nav>
-      {token ? <Dashboard /> : <SignIn />}
+      {user ? <Dashboard /> : <SignIn />}
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { openCookieSettings } from '@/lib/consent';
 import './Footer.css';
 
 export function Footer() {
@@ -38,9 +39,13 @@ export function Footer() {
           <Link to="/legal/terms">Terms</Link>
           <Link to="/legal/privacy">Privacy</Link>
           <Link to="/legal/cookies">Cookies</Link>
+          <button type="button" className="ftr__linkbtn" onClick={openCookieSettings}>
+            Cookie settings
+          </button>
+          <Link to="/legal/product-safety">Product safety</Link>
           <Link to="/legal/accessibility">Accessibility</Link>
         </span>
-        <span>Visa · Mastercard · Amex · Apple Pay · Google Pay · PayPal · Klarna</span>
+        <span>Secure card payments · Visa · Mastercard · Amex</span>
       </div>
     </footer>
   );

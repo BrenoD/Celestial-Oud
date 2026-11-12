@@ -511,5 +511,6 @@ func (s *Store) Purge(ctx context.Context) {
 	_, _ = s.db.Exec(ctx, `delete from idempotency_keys where created_at < now() - interval '24 hours'`)
 	_, _ = s.db.Exec(ctx, `delete from refresh_tokens where expires_at < now() or revoked_at < now() - interval '7 days'`)
 	_, _ = s.db.Exec(ctx, `delete from password_resets where expires_at < now()`)
+	_, _ = s.db.Exec(ctx, `delete from rate_limits where window_start < now() - interval '1 day'`)
 	_, _ = s.db.Exec(ctx, `update store_credits set remaining = 0 where expires_at < now() and remaining > 0`)
 }

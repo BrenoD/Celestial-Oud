@@ -209,7 +209,7 @@ export default function Home() {
             <span className="story__title">Our story</span>
             <span className="muted">[One or two lines about Celestial Oud — who makes it and why.]</span>
             <Link to="/about" className="text-link">
-              Read more
+              Read our story
             </Link>
           </div>
           <Newsletter />

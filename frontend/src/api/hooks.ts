@@ -5,7 +5,7 @@
  */
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import { api } from './index';
-import type { CreateOrderRequest, ProductQuery } from '@/types';
+import type { CreateOrderRequest, ProductQuery, OrderAccess } from '@/types';
 
 export const keys = {
   collections: ['collections'] as const,
@@ -51,8 +51,8 @@ export const useDeliveryMethods = () =>
 export const useOrders = (enabled: boolean) =>
   useQuery({ queryKey: keys.orders, queryFn: api.listOrders, enabled, staleTime: 30_000 });
 
-export const useOrder = (id: string, email?: string) =>
-  useQuery({ queryKey: keys.order(id), queryFn: () => api.getOrder(id, email), enabled: !!id, staleTime: FIVE_MIN });
+export const useOrder = (id: string, access?: OrderAccess) =>
+  useQuery({ queryKey: keys.order(id), queryFn: () => api.getOrder(id, access), enabled: !!id, staleTime: FIVE_MIN, retry: false });
 
 export const useFaqs = () => useQuery({ queryKey: keys.faqs, queryFn: api.listFaqs, staleTime: Infinity });
 

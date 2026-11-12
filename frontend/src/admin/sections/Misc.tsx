@@ -375,18 +375,19 @@ export function Settings() {
       setBusy(false);
     }
   };
-  const T = ({ k, label, type = 'text' }: { k: keyof SettingsT; label: string; type?: string }) => (
+  // Plain function (not a nested component) so inputs keep focus while typing.
+  const t = ({ k, label, type = 'text' }: { k: keyof SettingsT; label: string; type?: string }) => (
     <label className="field">{label}<input className="input" type={type} value={String(data[k] ?? '')} disabled={!writable} onChange={(e) => set(k, (type === 'number' ? Number(e.target.value) : e.target.value) as never)} /></label>
   );
   return (
     <form className="adm-form" onSubmit={submit}>
-      <T k="storeName" label="Store name" /><T k="supportEmail" label="Support email" />
+      {t({ k: 'storeName', label: 'Store name' })}{t({ k: 'supportEmail', label: 'Support email' })}
       <label className="field">Currency<select className="select" value={data.currency} disabled={!writable} onChange={(e) => set('currency', e.target.value)}><option>GBP</option><option>EUR</option><option>USD</option></select></label>
-      <T k="freeDeliveryThreshold" label="Free delivery over (pence)" type="number" />
-      <T k="dispatchCutoff" label="Dispatch cut-off (HH:MM)" /><T k="returnsDays" label="Returns window (days)" type="number" />
+      {t({ k: 'freeDeliveryThreshold', label: 'Free delivery over (pence)', type: 'number' })}
+      {t({ k: 'dispatchCutoff', label: 'Dispatch cut-off (HH:MM)' })}{t({ k: 'returnsDays', label: 'Returns window (days)', type: 'number' })}
       <label className="check" style={{ paddingTop: 22 }}><input type="checkbox" checked={data.maintenanceMode} disabled={!writable} onChange={(e) => set('maintenanceMode', e.target.checked)} /> Maintenance mode</label>
       <div />
-      <T k="companyName" label="Company name" /><T k="companyNumber" label="Company number" /><T k="vatNumber" label="VAT number" />
+      {t({ k: 'companyName', label: 'Company name' })}{t({ k: 'companyNumber', label: 'Company number' })}{t({ k: 'vatNumber', label: 'VAT number' })}
       <label className="field span-all">Registered address<input className="input" value={data.registeredAddress ?? ''} disabled={!writable} onChange={(e) => set('registeredAddress', e.target.value)} /></label>
       {writable && <div className="form-actions span-all"><button type="submit" className="btn btn--primary btn--sm" disabled={busy}>Save settings</button></div>}
     </form>

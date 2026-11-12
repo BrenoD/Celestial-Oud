@@ -28,3 +28,9 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* Equal weight: both choices share one style and one width. */
+.cookie__btn {
+  flex: 1 1 0;
+  min-width: 170px;
+}

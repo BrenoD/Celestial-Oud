@@ -1,0 +1,27 @@
+/* Metric-matched fallbacks (generated from @capsizecss/metrics): while the
+ * brand fonts load, text is laid out at the same size, so the swap causes no
+ * layout shift (CLS). */
+@font-face {
+  font-family: "Jost Fallback";
+  src: local("Arial"), local("Liberation Sans"), local("Helvetica");
+  size-adjust: 96.01%;
+  ascent-override: 111.45%;
+  descent-override: 39.06%;
+  line-gap-override: 0.00%;
+}
+@font-face {
+  font-family: "Cormorant Garamond Fallback";
+  src: local("Times New Roman"), local("Liberation Serif"), local("Times");
+  size-adjust: 96.98%;
+  ascent-override: 95.27%;
+  descent-override: 29.59%;
+  line-gap-override: 0.00%;
+}
+@font-face {
+  font-family: "Cinzel Fallback";
+  src: local("Times New Roman"), local("Liberation Serif"), local("Times");
+  size-adjust: 136.86%;
+  ascent-override: 71.31%;
+  descent-override: 27.18%;
+  line-gap-override: 0.00%;
+}

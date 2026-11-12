@@ -9,7 +9,7 @@ import './BrandPanel.css';
 export function BrandPanel({ label, size = 'md', className }: { label?: string; size?: 'sm' | 'md' | 'lg'; className?: string }) {
   return (
     <div className={`bpanel bpanel--${size}${className ? ` ${className}` : ''}`} role="img" aria-label={label ?? 'Celestial Oud'}>
-      <img src={assetUrl('/images/logo_dark.png')} alt="" width={120} height={130} loading="lazy" />
+      <img src={assetUrl('/images/logo-240.webp')} alt="" width={120} height={130} loading="lazy" />
       {label && <span className="bpanel__label">{label}</span>}
     </div>
   );
