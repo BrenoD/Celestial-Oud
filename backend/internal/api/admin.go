@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/BrenoD/Celestial-Oud/backend/internal/auth"
 	"github.com/BrenoD/Celestial-Oud/backend/internal/httpx"
+	"github.com/BrenoD/Celestial-Oud/backend/internal/mail"
 	"github.com/BrenoD/Celestial-Oud/backend/internal/money"
 	"github.com/BrenoD/Celestial-Oud/backend/internal/store"
 )
@@ -22,7 +24,7 @@ func (a *API) adminRoutes(r chi.Router) {
 	// Dashboard & analytics (viewer+)
 	r.Get("/dashboard", a.adminDashboard)
 	r.Get("/analytics", a.adminAnalytics)
-	r.Get("/audit", a.adminAudit)
+	r.With(manager).Get("/audit", a.adminAudit)
 
 	// Catalogue (read viewer+, write manager+)
 	r.Get("/products", a.adminListProducts)
@@ -35,7 +37,7 @@ func (a *API) adminRoutes(r chi.Router) {
 	r.With(manager).Post("/collections", a.adminSaveCollection)
 	r.With(manager).Put("/collections/{id}", a.adminSaveCollection)
 	r.With(manager).Delete("/collections/{id}", a.adminDeleteCollection)
-	r.Get("/stock-alerts", a.adminStockAlerts)
+	r.With(support).Get("/stock-alerts", a.adminStockAlerts)
 
 	// Orders (support+ for operations)
 	r.Get("/orders", a.adminListOrders)
@@ -59,7 +61,7 @@ func (a *API) adminRoutes(r chi.Router) {
 	r.Get("/reviews", a.adminReviews)
 	r.With(manager).Patch("/reviews/{id}", a.adminUpdateReview)
 	r.With(manager).Delete("/reviews/{id}", a.adminDeleteReview)
-	r.Get("/newsletter", a.adminNewsletter)
+	r.With(manager).Get("/newsletter", a.adminNewsletter)
 	r.With(manager).Post("/newsletter/send", a.adminNewsletterSend)
 
 	// Messages (support+)
@@ -83,7 +85,7 @@ func (a *API) adminRoutes(r chi.Router) {
 	r.With(manager).Delete("/blog/{id}", a.adminDeleteBlog)
 
 	// Generic sections: taxes, emails, notifications, integrations (manager+)
-	r.Get("/sections/{section}", a.adminSectionList)
+	r.With(manager).Get("/sections/{section}", a.adminSectionList)
 	r.With(manager).Post("/sections/{section}", a.adminSectionCreate)
 	r.With(manager).Patch("/sections/{section}/{id}", a.adminSectionUpdate)
 	r.With(manager).Delete("/sections/{section}/{id}", a.adminSectionDelete)
@@ -98,8 +100,40 @@ func (a *API) adminRoutes(r chi.Router) {
 }
 
 func (a *API) audit(r *http.Request, action, entity, id string, diff any) {
+	if f, ok := r.Context().Value(auditedKey{}).(*bool); ok {
+		*f = true
+	}
 	a.st.Audit(r.Context(), userID(r), action, entity, id, diff)
 }
+
+type auditedKey struct{}
+
+// auditWrites records every successful admin write. Handlers that log a
+// richer entry themselves (with a diff) mark the request so it is not logged twice.
+func (a *API) auditWrites(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
+			next.ServeHTTP(w, r)
+			return
+		}
+		done := false
+		r = r.WithContext(context.WithValue(r.Context(), auditedKey{}, &done))
+		sw := &statusRecorder{ResponseWriter: w, status: 200}
+		next.ServeHTTP(sw, r)
+		if !done && sw.status < 400 {
+			path := strings.TrimPrefix(r.URL.Path, "/v1/admin/")
+			entity, id, _ := strings.Cut(path, "/")
+			a.st.Audit(r.Context(), userID(r), strings.ToLower(r.Method), entity, id, map[string]any{"path": r.URL.Path, "status": sw.status})
+		}
+	})
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (s *statusRecorder) WriteHeader(code int) { s.status = code; s.ResponseWriter.WriteHeader(code) }
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
@@ -541,19 +575,34 @@ func (a *API) adminNewsletterSend(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	if len(in.Emails) == 0 || strings.TrimSpace(in.Subject) == "" || strings.TrimSpace(in.Body) == "" {
+	in.Subject, in.Body = strings.TrimSpace(in.Subject), strings.TrimSpace(in.Body)
+	if len(in.Emails) == 0 || in.Subject == "" || in.Body == "" {
 		httpx.Fail(w, r, httpx.BadRequest("Recipients, subject and message are required."))
 		return
 	}
-	htmlBody := strings.ReplaceAll(in.Body, "\n", "<br>")
+	if err := httpx.CheckLengths(httpx.Limit{Name: "Subject", Value: in.Subject, Max: 150}, httpx.Limit{Name: "Message", Value: in.Body, Max: 20000}); err != nil {
+		httpx.Fail(w, r, err)
+		return
+	}
+	for i, e := range in.Emails {
+		in.Emails[i] = strings.ToLower(strings.TrimSpace(e))
+	}
+	// Only confirmed, subscribed people receive marketing (PECR); everyone
+	// else in the selection is skipped and counted.
+	active, err := a.st.ActiveSubscribers(r.Context(), in.Emails)
+	if err != nil {
+		httpx.Fail(w, r, err)
+		return
+	}
 	sent := 0
-	for _, e := range in.Emails {
-		if err := a.mail.Raw(r.Context(), e, in.Subject, htmlBody); err == nil {
+	for email, token := range active {
+		body := mail.Layout(in.Subject, mail.Paragraphs(in.Body)+mail.UnsubscribeFooter(a.cfg.PublicURL, token), a.cfg.PublicURL)
+		if err := a.mail.Raw(r.Context(), email, in.Subject, body); err == nil {
 			sent++
 		}
 	}
-	a.audit(r, "newsletter", "campaign", in.Subject, map[string]int{"recipients": len(in.Emails), "sent": sent})
-	httpx.JSON(w, 200, map[string]int{"sent": sent, "total": len(in.Emails)})
+	a.audit(r, "newsletter", "campaign", in.Subject, map[string]int{"selected": len(in.Emails), "eligible": len(active), "sent": sent})
+	httpx.JSON(w, 200, map[string]int{"sent": sent, "total": len(in.Emails), "skipped": len(in.Emails) - len(active)})
 }
 
 // ── Messages ─────────────────────────────────────────────────────────────────
@@ -737,7 +786,29 @@ func (a *API) adminSectionList(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
+	for _, row := range rows {
+		redactSecrets(row["config"])
+	}
 	httpx.JSON(w, 200, rows)
+}
+
+// redactSecrets masks values of config keys that look like credentials, so
+// integration settings never send API keys back to the browser.
+func redactSecrets(v any) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return
+	}
+	for k, val := range m {
+		lk := strings.ToLower(k)
+		if strings.Contains(lk, "key") || strings.Contains(lk, "secret") || strings.Contains(lk, "token") || strings.Contains(lk, "password") {
+			if s, ok := val.(string); ok && s != "" {
+				m[k] = "••••" + s[max(0, len(s)-4):]
+			}
+		} else {
+			redactSecrets(val)
+		}
+	}
 }
 
 func (a *API) adminSectionCreate(w http.ResponseWriter, r *http.Request) {
@@ -823,9 +894,27 @@ func (a *API) adminInviteStaff(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	if !strings.Contains(in.Email, "@") {
-		httpx.Fail(w, r, httpx.BadRequest("A valid email is required."))
+	email, ok := httpx.NormEmail(in.Email)
+	if !ok {
+		httpx.Fail(w, r, httpx.InvalidEmail)
 		return
+	}
+	in.Email = email
+	// Inviting never changes an existing account: promotion is an explicit
+	// role change (with its own self/last-admin checks).
+	if _, err := a.st.UserByEmail(r.Context(), email); err == nil {
+		httpx.Fail(w, r, httpx.E(409, "email_taken", "This email already has an account. Change its role from the Users list instead."))
+		return
+	}
+	if err := httpx.CheckLengths(httpx.Limit{Name: "First name", Value: in.FirstName, Max: 60}, httpx.Limit{Name: "Last name", Value: in.LastName, Max: 60}); err != nil {
+		httpx.Fail(w, r, err)
+		return
+	}
+	if in.Password != "" {
+		if err := auth.ValidatePassword(in.Password, email); err != nil {
+			httpx.Fail(w, r, err)
+			return
+		}
 	}
 	hash := ""
 	if in.Password != "" {
@@ -861,6 +950,10 @@ func (a *API) adminSetRole(w http.ResponseWriter, r *http.Request) {
 	}
 	if chi.URLParam(r, "id") == httpx.UserFrom(r).ID && in.Role != "admin" {
 		httpx.Fail(w, r, httpx.BadRequest("You cannot remove your own admin role."))
+		return
+	}
+	if in.Role != "admin" && a.st.UserRole(r.Context(), chi.URLParam(r, "id")) == "admin" && a.st.AdminCount(r.Context()) <= 1 {
+		httpx.Fail(w, r, httpx.BadRequest("The store must keep at least one admin."))
 		return
 	}
 	u, err := a.st.SetRole(r.Context(), chi.URLParam(r, "id"), in.Role)

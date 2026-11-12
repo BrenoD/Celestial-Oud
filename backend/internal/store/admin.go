@@ -255,8 +255,18 @@ func (s *Store) InviteStaff(ctx context.Context, email, first, last, role, hash 
 	if !httpx.HasRole(role, "viewer") {
 		return nil, httpx.BadRequest("Unknown role.")
 	}
-	return scanUser(s.db.QueryRow(ctx, `insert into users (email, first_name, last_name, role, password_hash) values ($1,$2,$3,$4,$5)
-		on conflict (email_norm) do update set role = excluded.role returning `+userCols, strings.TrimSpace(email), first, last, role, hash))
+	u, err := scanUser(s.db.QueryRow(ctx, `insert into users (email, first_name, last_name, role, password_hash) values ($1,$2,$3,$4,nullif($5,''))
+		returning `+userCols, strings.TrimSpace(email), first, last, role, hash))
+	if err != nil && strings.Contains(err.Error(), "users_email_norm_idx") {
+		return nil, httpx.E(409, "email_taken", "This email already has an account.")
+	}
+	return u, err
+}
+
+func (s *Store) AdminCount(ctx context.Context) int {
+	var n int
+	_ = s.db.QueryRow(ctx, `select count(*) from users where role = 'admin'`).Scan(&n)
+	return n
 }
 
 func (s *Store) Audit(ctx context.Context, actor *string, action, entity, entityID string, diff any) {

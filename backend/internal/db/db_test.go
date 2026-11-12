@@ -24,3 +24,17 @@ func TestUsesTransactionPooler(t *testing.T) {
 		t.Error("override false ignored")
 	}
 }
+
+func TestRequireTLS(t *testing.T) {
+	cases := map[string]string{
+		"postgresql://u:p@aws-1-eu-west-3.pooler.supabase.com:6543/postgres": "postgresql://u:p@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?sslmode=require",
+		"postgres://u@db.example.com/x?application_name=a":                   "postgres://u@db.example.com/x?application_name=a&sslmode=require",
+		"postgres://u@127.0.0.1:5433/x":                                      "postgres://u@127.0.0.1:5433/x",
+		"postgres://u@db.example.com/x?sslmode=verify-full":                  "postgres://u@db.example.com/x?sslmode=verify-full",
+	}
+	for in, want := range cases {
+		if got := RequireTLS(in); got != want {
+			t.Errorf("RequireTLS(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"html"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -132,12 +133,39 @@ func btn(label, url string) string {
 
 func str(data map[string]any, k string) string { return html.EscapeString(fmt.Sprint(data[k])) }
 
+// raw is for values the caller has already built from escaped parts (items_html).
+func raw(data map[string]any, k string) string {
+	v, _ := data[k].(SafeHTML)
+	return string(v)
+}
+
+// SafeHTML marks a fragment as already escaped.
+type SafeHTML string
+
+// Paragraphs escapes plain text and turns blank-line-separated blocks into paragraphs.
+func Paragraphs(text string) string {
+	var b strings.Builder
+	for _, para := range strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n\n") {
+		if para = strings.TrimSpace(para); para != "" {
+			b.WriteString(p(strings.ReplaceAll(html.EscapeString(para), "\n", "<br>")))
+		}
+	}
+	return b.String()
+}
+
+// UnsubscribeFooter is appended to every marketing email.
+func UnsubscribeFooter(site, token string) string {
+	u := site + "/newsletter/unsubscribe?token=" + url.QueryEscape(token)
+	return `<p style="margin:24px 0 0;font-size:12px;color:#5A4334">You receive this because you subscribed to Celestial Oud news. <a href="` +
+		html.EscapeString(u) + `" style="color:#7A5530">Unsubscribe</a></p>`
+}
+
 func render(key string, d map[string]any, site string) string {
 	switch key {
 	case "welcome":
 		return Layout("Welcome", h1("Welcome, "+str(d, "name"))+p("Your Celestial Oud account is ready. Track orders, save your wishlist and build your scent profile.")+btn("Shop fragrances", site+"/collections/all"), site)
 	case "order_confirmation":
-		return Layout("Order confirmed", h1("Thank you — order "+str(d, "order_id")+" is confirmed")+p("We've received your payment of <b>"+str(d, "total")+"</b>. We'll email you again when it's dispatched.")+p(str(d, "items_html"))+btn("View order", site+"/checkout/confirmed/"+str(d, "order_id")), site)
+		return Layout("Order confirmed", h1("Thank you — order "+str(d, "order_id")+" is confirmed")+p("We've received your payment of <b>"+str(d, "total")+"</b>. We'll email you again when it's dispatched.")+p(raw(d, "items_html"))+btn("View order", str(d, "order_url")), site)
 	case "order_dispatched":
 		return Layout("On its way", h1("Order "+str(d, "order_id")+" is on its way")+p("Carrier: <b>"+str(d, "carrier")+"</b> · Tracking: <b>"+str(d, "tracking")+"</b>")+btn("Track order", site+"/help#track"), site)
 	case "order_delivered":
@@ -148,6 +176,8 @@ func render(key string, d map[string]any, site string) string {
 		return Layout("Reset password", h1("Reset your password")+p("This link is valid for 1 hour. If you didn't ask for it, you can ignore this email.")+btn("Choose a new password", str(d, "url")), site)
 	case "back_in_stock":
 		return Layout("Back in stock", h1(str(d, "product")+" is back")+p("The size you wanted is available again.")+btn("Shop now", site+"/products/"+str(d, "slug")), site)
+	case "newsletter_confirm":
+		return Layout("Confirm", h1("Confirm your subscription")+p("Tap the button to start receiving Celestial Oud news and offers. If you didn't ask for this, ignore this email and nothing will happen.")+btn("Confirm subscription", str(d, "url")), site)
 	case "newsletter_welcome":
 		return Layout("Welcome", h1("Your 10% welcome code")+p("Use <b>WELCOME10</b> at checkout on your first order.")+btn("Shop bestsellers", site+"/collections/bestsellers"), site)
 	case "review_request":
@@ -156,7 +186,7 @@ func render(key string, d map[string]any, site string) string {
 		return Layout("Reply", h1("Re: "+str(d, "subject"))+p(strings.ReplaceAll(str(d, "reply"), "\n", "<br>")), site)
 	// Admin notifications
 	case "new_order":
-		return Layout("New order", h1("New order "+str(d, "order_id"))+p(str(d, "customer")+" · "+str(d, "total"))+p(str(d, "items_html")), site)
+		return Layout("New order", h1("New order "+str(d, "order_id"))+p(str(d, "customer")+" · "+str(d, "total"))+p(raw(d, "items_html")), site)
 	case "low_stock":
 		return Layout("Low stock", h1("Low stock: "+str(d, "sku"))+p("Only "+str(d, "stock")+" left."), site)
 	case "new_review":

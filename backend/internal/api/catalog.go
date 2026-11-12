@@ -3,12 +3,15 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
-	"regexp"
+	"net/url"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/BrenoD/Celestial-Oud/backend/internal/auth"
 	"github.com/BrenoD/Celestial-Oud/backend/internal/httpx"
 	"github.com/BrenoD/Celestial-Oud/backend/internal/store"
 )
@@ -179,14 +182,14 @@ func (a *API) validateDiscount(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, 200, map[string]any{"code": d.Code, "amount": amount, "type": d.Type})
 }
 
-var ukPostcode = regexp.MustCompile(`(?i)^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$`)
+var lookupClient = &http.Client{Timeout: 5 * time.Second}
 
 // lookupPostcode proxies to Ideal Postcodes when a key is configured; without
 // one it validates the format and returns an empty list so the UI falls back
 // to manual entry.
 func (a *API) lookupPostcode(w http.ResponseWriter, r *http.Request) {
 	pc := strings.ToUpper(strings.TrimSpace(r.URL.Query().Get("postcode")))
-	if !ukPostcode.MatchString(pc) {
+	if !httpx.UKPostcode.MatchString(pc) {
 		httpx.Fail(w, r, httpx.Unprocessable("invalid_postcode", "Enter a valid UK postcode."))
 		return
 	}
@@ -200,12 +203,19 @@ func (a *API) lookupPostcode(w http.ResponseWriter, r *http.Request) {
 		httpx.JSON(w, 200, []addr{})
 		return
 	}
-	res, err := http.Get("https://api.ideal-postcodes.co.uk/v1/postcodes/" + strings.ReplaceAll(pc, " ", "") + "?api_key=" + a.cfg.IdealPostcodesKey)
+	req, _ := http.NewRequestWithContext(r.Context(), http.MethodGet,
+		"https://api.ideal-postcodes.co.uk/v1/postcodes/"+url.PathEscape(strings.ReplaceAll(pc, " ", "")), nil)
+	req.Header.Set("Authorization", `IDEALPOSTCODES api_key="`+a.cfg.IdealPostcodesKey+`"`)
+	res, err := lookupClient.Do(req)
 	if err != nil {
 		httpx.JSON(w, 200, []addr{})
 		return
 	}
 	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		httpx.JSON(w, 200, []addr{})
+		return
+	}
 	var payload struct {
 		Result []struct {
 			Line1, Line2, PostTown, Postcode string `json:",omitempty"`
@@ -215,7 +225,7 @@ func (a *API) lookupPostcode(w http.ResponseWriter, r *http.Request) {
 			PC                               string `json:"postcode"`
 		} `json:"result"`
 	}
-	_ = json.NewDecoder(res.Body).Decode(&payload)
+	_ = json.NewDecoder(io.LimitReader(res.Body, 1<<20)).Decode(&payload)
 	out := make([]addr, 0, len(payload.Result))
 	for _, x := range payload.Result {
 		out = append(out, addr{Line1: x.L1, Line2: x.L2, City: x.Town, Postcode: x.PC})
@@ -287,26 +297,66 @@ func (a *API) subscribe(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	isNew, err := a.st.Subscribe(r.Context(), in.Email, in.Name, in.Source)
+	email, ok := httpx.NormEmail(in.Email)
+	if !ok {
+		httpx.Fail(w, r, httpx.InvalidEmail)
+		return
+	}
+	if err := httpx.CheckLengths(httpx.Limit{Name: "Name", Value: in.Name, Max: 60}, httpx.Limit{Name: "Source", Value: in.Source, Max: 30}); err != nil {
+		httpx.Fail(w, r, err)
+		return
+	}
+	a.requestSubscription(r, email, in.Name, in.Source)
+	// Same answer whatever the address's state: nothing is revealed.
+	httpx.NoContent(w)
+}
+
+// requestSubscription stores a pending subscription and emails the
+// confirmation link (at most 3 per address per day).
+func (a *API) requestSubscription(r *http.Request, email, name, source string) {
+	l := limits["news-email"]
+	if ok, _, _ := a.st.Hit(r.Context(), "news-email:"+subjectKey(email), l.n, l.window); !ok {
+		return
+	}
+	plain, hash := auth.NewOpaqueToken()
+	needs, err := a.st.Subscribe(r.Context(), email, name, source, hash)
+	if err != nil {
+		httpx.Logger(r).Error("subscribe", "err", err)
+		return
+	}
+	if needs {
+		a.mail.Send(r.Context(), "newsletter_confirm", email, map[string]any{"url": a.cfg.PublicURL + "/newsletter/confirm?token=" + plain})
+	}
+}
+
+func (a *API) confirmSubscription(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Token string `json:"token"`
+	}
+	if err := httpx.Decode(r, &in); err != nil {
+		httpx.Fail(w, r, err)
+		return
+	}
+	email, name, first, err := a.st.ConfirmSubscription(r.Context(), auth.HashToken(in.Token))
 	if err != nil {
 		httpx.Fail(w, r, err)
 		return
 	}
-	if isNew {
-		a.mail.Send(r.Context(), "newsletter_welcome", in.Email, map[string]any{"name": in.Name})
+	if first {
+		a.mail.Send(r.Context(), "newsletter_welcome", email, map[string]any{"name": name})
 	}
 	httpx.NoContent(w)
 }
 
 func (a *API) unsubscribe(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		Email string `json:"email"`
+		Token string `json:"token"`
 	}
 	if err := httpx.Decode(r, &in); err != nil {
 		httpx.Fail(w, r, err)
 		return
 	}
-	if err := a.st.Unsubscribe(r.Context(), in.Email); err != nil {
+	if err := a.st.Unsubscribe(r.Context(), in.Token); err != nil {
 		httpx.Fail(w, r, err)
 		return
 	}

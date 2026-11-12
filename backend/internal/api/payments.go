@@ -74,6 +74,22 @@ func (p *Payments) IntentStatus(ctx context.Context, id string) (string, error) 
 	return string(pi.Status), nil
 }
 
+// CancelIntent cancels an unpaid PaymentIntent and returns its final status
+// ("canceled", or "succeeded" if the customer paid in the meantime).
+func (p *Payments) CancelIntent(ctx context.Context, id string) (string, error) {
+	if !p.enabled {
+		return "canceled", nil
+	}
+	pi, err := p.sc.PaymentIntents.Cancel(id, &stripe.PaymentIntentCancelParams{Params: stripe.Params{Context: ctx}})
+	if err != nil {
+		if cur, gerr := p.sc.PaymentIntents.Get(id, &stripe.PaymentIntentParams{Params: stripe.Params{Context: ctx}}); gerr == nil {
+			return string(cur.Status), nil
+		}
+		return "", err
+	}
+	return string(pi.Status), nil
+}
+
 func (p *Payments) Refund(ctx context.Context, intentID string, amount int) error {
 	if !p.enabled {
 		return nil

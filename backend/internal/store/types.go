@@ -210,22 +210,25 @@ type Tracking struct {
 }
 
 type Order struct {
-	ID                  string      `json:"id"`
-	UserID              *string     `json:"userId,omitempty"`
-	Email               string      `json:"email"`
-	CustomerName        string      `json:"customerName"`
-	Status              string      `json:"status"`
-	PaymentStatus       string      `json:"paymentStatus"`
-	Subtotal            int         `json:"subtotal"`
-	Discount            int         `json:"discount"`
-	Delivery            int         `json:"delivery"`
-	Total               int         `json:"total"`
-	Currency            string      `json:"currency"`
-	DiscountCode        *string     `json:"discountCode,omitempty"`
-	DeliveryMethodID    string      `json:"deliveryMethodId"`
-	DeliveryMethodName  string      `json:"deliveryMethodName,omitempty"`
-	ShippingAddress     Address     `json:"shippingAddress"`
-	FreeSample          *string     `json:"freeSample,omitempty"`
+	ID                 string  `json:"id"`
+	UserID             *string `json:"userId,omitempty"`
+	Email              string  `json:"email"`
+	CustomerName       string  `json:"customerName"`
+	Status             string  `json:"status"`
+	PaymentStatus      string  `json:"paymentStatus"`
+	Subtotal           int     `json:"subtotal"`
+	Discount           int     `json:"discount"`
+	Delivery           int     `json:"delivery"`
+	Total              int     `json:"total"`
+	Currency           string  `json:"currency"`
+	DiscountCode       *string `json:"discountCode,omitempty"`
+	DeliveryMethodID   string  `json:"deliveryMethodId"`
+	DeliveryMethodName string  `json:"deliveryMethodName,omitempty"`
+	ShippingAddress    Address `json:"shippingAddress"`
+	FreeSample         *string `json:"freeSample,omitempty"`
+	// AccessToken is returned once, when the order is created: the guest's
+	// key to view it later. Only its hash is stored.
+	AccessToken         string      `json:"accessToken,omitempty"`
 	GiftWrap            bool        `json:"giftWrap"`
 	GiftMessage         *string     `json:"giftMessage,omitempty"`
 	Notes               *string     `json:"notes,omitempty"`

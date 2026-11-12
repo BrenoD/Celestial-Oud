@@ -69,8 +69,10 @@ func Fail(w http.ResponseWriter, r *http.Request, err error) {
 				apiErr = E(409, "conflict", "A record with this value already exists.")
 			case "23503":
 				apiErr = E(409, "in_use", "This record is referenced by other data and cannot be changed.")
-			case "23514", "22P02", "22001":
-				apiErr = BadRequest("Invalid value: " + pgErr.Message)
+			case "23514", "22P02", "22001", "22003":
+				// Never echo database internals to clients.
+				Logger(r).Warn("rejected value", "code", pgErr.Code, "constraint", pgErr.ConstraintName)
+				apiErr = BadRequest("One of the values is not valid.")
 			}
 		}
 		if apiErr == nil {
@@ -90,9 +92,17 @@ func Decode(r *http.Request, v any) error {
 		if errors.Is(err, io.EOF) {
 			return BadRequest("Request body is required.")
 		}
-		return BadRequest("Invalid JSON: " + err.Error())
+		return decodeErr(err)
 	}
 	return nil
+}
+
+func decodeErr(err error) error {
+	var tooBig *http.MaxBytesError
+	if errors.As(err, &tooBig) {
+		return E(413, "too_large", "Request body is too large.")
+	}
+	return BadRequest("The request body is not valid JSON.")
 }
 
 // DecodeLoose is Decode without DisallowUnknownFields (for partial updates).
@@ -102,7 +112,18 @@ func DecodeLoose(r *http.Request, v any) error {
 		if errors.Is(err, io.EOF) {
 			return BadRequest("Request body is required.")
 		}
-		return BadRequest("Invalid JSON: " + err.Error())
+		return decodeErr(err)
+	}
+	return nil
+}
+
+// DecodeBytes decodes an already-read body (used where the raw bytes are also hashed).
+func DecodeBytes(b []byte, v any) error {
+	if len(b) == 0 {
+		return BadRequest("Request body is required.")
+	}
+	if err := json.Unmarshal(b, v); err != nil {
+		return decodeErr(err)
 	}
 	return nil
 }
@@ -157,7 +178,7 @@ func RequestLogger(base *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			id := r.Header.Get("X-Request-Id")
-			if id == "" {
+			if !validRequestID(id) {
 				id = newID()
 			}
 			log := base.With("request_id", id)
@@ -184,6 +205,18 @@ func Recoverer(next http.Handler) http.Handler {
 	})
 }
 
+func validRequestID(id string) bool {
+	if id == "" || len(id) > 64 {
+		return false
+	}
+	for _, c := range id {
+		if !(c == '-' || c == '_' || c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
+			return false
+		}
+	}
+	return true
+}
+
 func SecurityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
@@ -191,6 +224,10 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "strict-origin-when-cross-origin")
 		h.Set("Cache-Control", "no-store")
+		h.Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+		h.Set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()")
+		h.Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+		h.Set("Cross-Origin-Opener-Policy", "same-origin")
 		next.ServeHTTP(w, r)
 	})
 }
@@ -227,35 +264,59 @@ func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
 	return rl
 }
 
+// Allow counts one hit for key and reports whether it is within the limit.
+func (rl *RateLimiter) Allow(key string) (bool, time.Duration) {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	b := rl.hits[key]
+	now := time.Now()
+	if b == nil || now.After(b.reset) {
+		b = &bucket{reset: now.Add(rl.window)}
+		rl.hits[key] = b
+	}
+	b.count++
+	return b.count <= rl.limit, time.Until(b.reset)
+}
+
+// Middleware limits per client IP (in-memory, per instance): a coarse flood
+// guard in front of the shared, database-backed per-route limits.
 func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip := ClientIP(r)
-		rl.mu.Lock()
-		b := rl.hits[ip]
-		now := time.Now()
-		if b == nil || now.After(b.reset) {
-			b = &bucket{reset: now.Add(rl.window)}
-			rl.hits[ip] = b
-		}
-		b.count++
-		over := b.count > rl.limit
-		retry := time.Until(b.reset)
-		rl.mu.Unlock()
-		if over {
-			w.Header().Set("Retry-After", fmt.Sprint(int(retry.Seconds())+1))
-			JSON(w, 429, E(429, "rate_limited", "Too many attempts. Please wait a moment and try again."))
+		if ok, retry := rl.Allow(ClientIP(r)); !ok {
+			TooMany(w, retry)
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
 }
 
+func TooMany(w http.ResponseWriter, retry time.Duration) {
+	w.Header().Set("Retry-After", fmt.Sprint(int(retry.Seconds())+1))
+	JSON(w, 429, E(429, "rate_limited", "Too many attempts. Please wait a moment and try again."))
+}
+
+// TrustProxy says which forwarding header carries the real client address:
+//
+//	"cloudflare" — CF-Connecting-IP (set by Cloudflare's edge; clients cannot forge it there)
+//	"xff-last"   — the right-most X-Forwarded-For entry (appended by a single trusted proxy, e.g. Render)
+//	""           — none: use the TCP peer address.
+//
+// Trusting a header the client controls would let anyone bypass rate limits.
+var TrustProxy = ""
+
 func ClientIP(r *http.Request) string {
-	if v := r.Header.Get("CF-Connecting-IP"); v != "" {
-		return v
-	}
-	if v := r.Header.Get("X-Forwarded-For"); v != "" {
-		return strings.TrimSpace(strings.Split(v, ",")[0])
+	switch TrustProxy {
+	case "cloudflare":
+		if v := strings.TrimSpace(r.Header.Get("CF-Connecting-IP")); net.ParseIP(v) != nil {
+			return v
+		}
+	case "xff-last":
+		if v := r.Header.Get("X-Forwarded-For"); v != "" {
+			parts := strings.Split(v, ",")
+			if ip := strings.TrimSpace(parts[len(parts)-1]); net.ParseIP(ip) != nil {
+				return ip
+			}
+		}
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {

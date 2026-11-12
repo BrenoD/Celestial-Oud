@@ -29,10 +29,15 @@ services:
         generateValue: true
       - key: APP_ENV
         value: production
-      # Test environment: orders are marked paid without charging a card.
-      # Remove (or add STRIPE_SECRET_KEY) before taking real orders.
-      - key: PAYMENTS_MODE
-        value: mock
+      # No PAYMENTS_MODE=mock here: this host shares the production database,
+      # so test orders would appear as real paid orders. Checkout is disabled
+      # (503) until Stripe keys are set.
+      # Render's proxy appends the client IP to X-Forwarded-For.
+      - key: TRUST_PROXY
+        value: xff-last
+      # Preview storefront (github.io) and this API are different sites.
+      - key: COOKIE_SAMESITE
+        value: None
       - key: PUBLIC_URL
         value: https://brenod.github.io/Celestial-Oud
       - key: CORS_ORIGINS

@@ -79,22 +79,50 @@ func (s *Store) DeleteUser(ctx context.Context, id string) error {
 
 // ── Refresh tokens ───────────────────────────────────────────────────────────
 
-func (s *Store) SaveRefresh(ctx context.Context, userID, hash, ua string, ttl time.Duration) error {
-	_, err := s.db.Exec(ctx, `insert into refresh_tokens (user_id, token_hash, user_agent, expires_at) values ($1,$2,$3,$4)`,
-		userID, hash, ua, time.Now().Add(ttl))
+// SaveRefresh stores a new refresh token. family is empty for a fresh sign-in
+// and carries over on rotation, so a replayed old token can revoke them all.
+func (s *Store) SaveRefresh(ctx context.Context, userID, hash, ua, family string, ttl time.Duration) error {
+	if len(ua) > 300 {
+		ua = ua[:300]
+	}
+	_, err := s.db.Exec(ctx, `insert into refresh_tokens (user_id, token_hash, user_agent, expires_at, family_id)
+		values ($1,$2,$3,$4, coalesce(nullif($5,'')::uuid, gen_random_uuid()))`, userID, hash, ua, time.Now().Add(ttl), family)
 	return err
 }
 
-// ConsumeRefresh revokes the token and returns its user. Rotating tokens means
-// a stolen token is only valid until the legitimate client refreshes.
-func (s *Store) ConsumeRefresh(ctx context.Context, hash string) (string, error) {
-	var userID string
-	err := s.db.QueryRow(ctx, `update refresh_tokens set revoked_at = now()
-		where token_hash = $1 and revoked_at is null and expires_at > now() returning user_id`, hash).Scan(&userID)
+var errSession = httpx.E(401, "invalid_refresh", "Your session has expired. Please sign in again.")
+
+// ConsumeRefresh revokes the token and returns its user and family. A token
+// that was already rotated (revoked) is a replay: the whole family is revoked,
+// signing out both the thief and the victim.
+func (s *Store) ConsumeRefresh(ctx context.Context, hash string) (string, string, error) {
+	var userID, family string
+	var revoked *time.Time
+	var expires time.Time
+	err := s.db.QueryRow(ctx, `select user_id, family_id::text, revoked_at, expires_at from refresh_tokens where token_hash = $1`, hash).
+		Scan(&userID, &family, &revoked, &expires)
 	if err != nil {
-		return "", httpx.E(401, "invalid_refresh", "Your session has expired. Please sign in again.")
+		return "", "", errSession
 	}
-	return userID, nil
+	if revoked != nil {
+		_, _ = s.db.Exec(ctx, `update refresh_tokens set revoked_at = now() where family_id = $1 and revoked_at is null`, family)
+		return "", "", errSession
+	}
+	if time.Now().After(expires) {
+		return "", "", errSession
+	}
+	tag, err := s.db.Exec(ctx, `update refresh_tokens set revoked_at = now() where token_hash = $1 and revoked_at is null`, hash)
+	if err != nil || tag.RowsAffected() == 0 {
+		// Lost a race with a concurrent refresh of the same token: treat as replay.
+		_, _ = s.db.Exec(ctx, `update refresh_tokens set revoked_at = now() where family_id = $1 and revoked_at is null`, family)
+		return "", "", errSession
+	}
+	return userID, family, nil
+}
+
+// RevokeRefresh revokes one token (logout) without replay handling.
+func (s *Store) RevokeRefresh(ctx context.Context, hash string) {
+	_, _ = s.db.Exec(ctx, `update refresh_tokens set revoked_at = now() where token_hash = $1 and revoked_at is null`, hash)
 }
 
 func (s *Store) RevokeAllRefresh(ctx context.Context, userID string) error {
@@ -109,6 +137,7 @@ func (s *Store) SaveReset(ctx context.Context, userID, hash string) error {
 	return err
 }
 
+// ConsumeReset uses the link and invalidates every other open link for the user.
 func (s *Store) ConsumeReset(ctx context.Context, hash string) (string, error) {
 	var userID string
 	err := s.db.QueryRow(ctx, `update password_resets set used_at = now()
@@ -116,7 +145,15 @@ func (s *Store) ConsumeReset(ctx context.Context, hash string) (string, error) {
 	if err != nil {
 		return "", httpx.E(401, "invalid_reset", "This link is invalid or has expired.")
 	}
+	_, _ = s.db.Exec(ctx, `update password_resets set used_at = now() where user_id = $1 and used_at is null`, userID)
 	return userID, nil
+}
+
+// UserRole returns the current role (or "" if the user no longer exists).
+func (s *Store) UserRole(ctx context.Context, id string) string {
+	var role string
+	_ = s.db.QueryRow(ctx, `select role from users where id = $1`, id).Scan(&role)
+	return role
 }
 
 // ── Addresses ────────────────────────────────────────────────────────────────

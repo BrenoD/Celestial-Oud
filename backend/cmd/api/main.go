@@ -16,6 +16,7 @@ import (
 	"github.com/BrenoD/Celestial-Oud/backend/internal/auth"
 	"github.com/BrenoD/Celestial-Oud/backend/internal/config"
 	"github.com/BrenoD/Celestial-Oud/backend/internal/db"
+	"github.com/BrenoD/Celestial-Oud/backend/internal/httpx"
 	"github.com/BrenoD/Celestial-Oud/backend/internal/mail"
 	"github.com/BrenoD/Celestial-Oud/backend/internal/store"
 )
@@ -47,7 +48,9 @@ func main() {
 	}
 
 	st := store.New(database.Pool)
+	httpx.TrustProxy = cfg.TrustProxy
 	authSvc := auth.New(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
+	authSvc.RoleOf = st.UserRole
 	mailer := mail.New(cfg.ResendAPIKey, cfg.EmailFrom, cfg.AdminEmails, cfg.PublicURL, st, log)
 	handler := api.New(cfg, st, authSvc, mailer, log).Router()
 
@@ -61,7 +64,7 @@ func main() {
 	}
 
 	go func() {
-		log.Info("listening", "port", cfg.Port, "env", cfg.Env, "payments", cfg.PaymentsMode)
+		log.Info("listening", "port", cfg.Port, "env", cfg.Env, "payments", cfg.PaymentsMode, "trust_proxy", cfg.TrustProxy)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error("server", "err", err)
 			os.Exit(1)

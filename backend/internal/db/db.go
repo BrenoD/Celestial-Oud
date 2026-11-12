@@ -23,8 +23,25 @@ type DB struct {
 	*pgxpool.Pool
 }
 
+// RequireTLS appends sslmode=require to a remote DATABASE_URL that does not
+// choose a mode, so the default "prefer" can never fall back to plaintext.
+func RequireTLS(url string) string {
+	if strings.Contains(url, "sslmode=") {
+		return url
+	}
+	for _, local := range []string{"@localhost", "@127.0.0.1", "@[::1]", "host=/", "@/"} {
+		if strings.Contains(url, local) {
+			return url
+		}
+	}
+	if strings.Contains(url, "?") {
+		return url + "&sslmode=require"
+	}
+	return url + "?sslmode=require"
+}
+
 func Connect(ctx context.Context, url string) (*DB, error) {
-	cfg, err := pgxpool.ParseConfig(url)
+	cfg, err := pgxpool.ParseConfig(RequireTLS(url))
 	if err != nil {
 		return nil, fmt.Errorf("parse DATABASE_URL: %w", err)
 	}

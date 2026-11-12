@@ -25,23 +25,43 @@ type PricedOrder struct {
 	Total        int
 	DiscountCode *string
 	Method       DeliveryMethod
+	Sample       *OrderLine // free 2ml sample, priced at 0
 }
+
+// Order size caps: stop one anonymous order reserving the whole stock.
+const (
+	maxLines        = 20
+	maxQtyPerSKU    = 10
+	maxUnitsInOrder = 20
+)
 
 // PriceOrder resolves SKUs, checks stock and computes totals.
 func (s *Store) PriceOrder(ctx context.Context, in CreateOrderInput, freeThreshold int) (*PricedOrder, error) {
 	if len(in.Lines) == 0 {
 		return nil, httpx.Unprocessable("empty_basket", "Your basket is empty.")
 	}
+	if len(in.Lines) > maxLines {
+		return nil, httpx.Unprocessable("too_many_lines", "Your basket has too many lines. Please contact us for large orders.")
+	}
 	skus := make([]string, 0, len(in.Lines))
 	qty := map[string]int{}
+	units := 0
 	for _, l := range in.Lines {
-		if l.Qty < 1 || l.Qty > 10 {
+		if l.Qty < 1 || l.Qty > maxQtyPerSKU || len(l.SKU) > 80 {
 			return nil, httpx.Unprocessable("bad_qty", "Quantities must be between 1 and 10.")
 		}
 		if _, dup := qty[l.SKU]; !dup {
 			skus = append(skus, l.SKU)
 		}
 		qty[l.SKU] += l.Qty
+		units += l.Qty
+		// Limits apply to the total per item, so repeating a line cannot get round them.
+		if qty[l.SKU] > maxQtyPerSKU {
+			return nil, httpx.Unprocessable("bad_qty", "You can buy up to 10 of each item per order.")
+		}
+	}
+	if units > maxUnitsInOrder {
+		return nil, httpx.Unprocessable("too_many_units", "You can buy up to 20 items per order. Please contact us for large orders.")
 	}
 	rows, err := s.db.Query(ctx, `select s.sku, s.id, s.price, s.stock, s.label, s.is_sample, p.id, p.slug, p.name, p.images, p.tags
 		from product_sizes s join products p on p.id = s.product_id where s.sku = any($1) and p.status = 'active'`, skus)
@@ -93,6 +113,13 @@ func (s *Store) PriceOrder(ctx context.Context, in CreateOrderInput, freeThresho
 		po.Lines = append(po.Lines, l)
 		po.Subtotal += l.UnitPrice * l.Qty
 	}
+	if in.FreeSampleSKU != nil && strings.TrimSpace(*in.FreeSampleSKU) != "" {
+		sample, err := s.sampleLine(ctx, strings.TrimSpace(*in.FreeSampleSKU), qty)
+		if err != nil {
+			return nil, err
+		}
+		po.Sample = sample
+	}
 	freeDelivery := false
 	if in.DiscountCode != nil && strings.TrimSpace(*in.DiscountCode) != "" {
 		d, amount, err := s.ValidateDiscount(ctx, *in.DiscountCode, po.Subtotal)
@@ -119,6 +146,26 @@ func (s *Store) PriceOrder(ctx context.Context, in CreateOrderInput, freeThresho
 	return po, nil
 }
 
+// sampleLine resolves the free sample: it must be an active 2ml sample SKU
+// with stock left after the paid lines.
+func (s *Store) sampleLine(ctx context.Context, sku string, paid map[string]int) (*OrderLine, error) {
+	var l OrderLine
+	var sizeID, productID int64
+	var stock int
+	err := s.db.QueryRow(ctx, `select s.sku, s.id, s.stock, s.label, p.id, p.slug, p.name
+		from product_sizes s join products p on p.id = s.product_id
+		where s.sku = $1 and s.is_sample and p.status = 'active'`, sku).Scan(&l.SKU, &sizeID, &stock, &l.VariantLabel, &productID, &l.Slug, &l.Name)
+	if err != nil {
+		return nil, httpx.Unprocessable("bad_sample", "That free sample is not available. Please choose another.")
+	}
+	if stock < paid[sku]+1 {
+		return nil, httpx.Unprocessable("sample_out_of_stock", "That free sample is out of stock. Please choose another.")
+	}
+	l.VariantLabel = "Free sample · " + l.VariantLabel
+	l.SizeID, l.ProductID, l.Qty, l.UnitPrice = &sizeID, &productID, 1, 0
+	return &l, nil
+}
+
 func newOrderID() string {
 	n, _ := rand.Int(rand.Reader, big.NewInt(900000))
 	return fmt.Sprintf("CO-%06d", n.Int64()+100000)
@@ -127,9 +174,21 @@ func newOrderID() string {
 // CreateOrder inserts the order + lines and reserves stock. Status is
 // pending_payment; MarkPaid is called by the Stripe webhook (or immediately in
 // dev when Stripe is not configured).
-func (s *Store) CreateOrder(ctx context.Context, in CreateOrderInput, po *PricedOrder, userID *string, idem string, eta time.Time) (*Order, error) {
+func (s *Store) CreateOrder(ctx context.Context, in CreateOrderInput, po *PricedOrder, userID *string, idem, accessHash string, eta time.Time) (*Order, error) {
 	var id string
+	email := strings.ToLower(strings.TrimSpace(in.Email))
+	var sampleSKU *string
+	lines := po.Lines
+	if po.Sample != nil {
+		sampleSKU = &po.Sample.SKU
+		lines = append(append([]OrderLine{}, po.Lines...), *po.Sample)
+	}
 	err := s.Tx(ctx, func(tx pgx.Tx) error {
+		if po.DiscountCode != nil {
+			if err := redeemDiscount(ctx, tx, *po.DiscountCode, email, userID); err != nil {
+				return err
+			}
+		}
 		for attempt := 0; attempt < 5; attempt++ {
 			id = newOrderID()
 			var exists bool
@@ -141,14 +200,14 @@ func (s *Store) CreateOrder(ctx context.Context, in CreateOrderInput, po *Priced
 			}
 		}
 		_, err := tx.Exec(ctx, `insert into orders (id, user_id, email, status, subtotal, discount, delivery, total, discount_code, delivery_method_id,
-			shipping_address, free_sample_sku, gift_wrap, gift_message, marketing_opt_in, notes, idempotency_key, estimated_delivery)
-			values ($1,$2,$3,'pending_payment',$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
-			id, userID, strings.ToLower(strings.TrimSpace(in.Email)), po.Subtotal, po.Discount, po.Delivery, po.Total, po.DiscountCode, po.Method.ID,
-			jsonb(in.ShippingAddress), in.FreeSampleSKU, in.GiftWrap, in.GiftMessage, in.MarketingOptIn, in.Notes, strPtr(idem), eta)
+			shipping_address, free_sample_sku, gift_wrap, gift_message, marketing_opt_in, notes, idempotency_key, estimated_delivery, access_token_hash)
+			values ($1,$2,$3,'pending_payment',$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+			id, userID, email, po.Subtotal, po.Discount, po.Delivery, po.Total, po.DiscountCode, po.Method.ID,
+			jsonb(in.ShippingAddress), sampleSKU, in.GiftWrap, in.GiftMessage, in.MarketingOptIn, in.Notes, strPtr(idem), eta, accessHash)
 		if err != nil {
 			return err
 		}
-		for _, l := range po.Lines {
+		for _, l := range lines {
 			if _, err := tx.Exec(ctx, `insert into order_items (order_id, product_id, size_id, sku, name, variant_label, image, unit_price, qty)
 				values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, id, l.ProductID, l.SizeID, l.SKU, l.Name, l.VariantLabel, l.Image, l.UnitPrice, l.Qty); err != nil {
 				return err
@@ -161,17 +220,56 @@ func (s *Store) CreateOrder(ctx context.Context, in CreateOrderInput, po *Priced
 				return httpx.Unprocessable("out_of_stock", fmt.Sprintf("%s is out of stock.", l.Name))
 			}
 		}
-		if po.DiscountCode != nil {
-			if _, err := tx.Exec(ctx, `update discount_codes set uses = uses + 1 where code = $1`, *po.DiscountCode); err != nil {
-				return err
-			}
-		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 	return s.OrderByID(ctx, id)
+}
+
+// redeemDiscount counts a use atomically (no overselling under concurrency)
+// and enforces the per-customer limit, serialised per code+customer.
+func redeemDiscount(ctx context.Context, tx pgx.Tx, code, email string, userID *string) error {
+	var perCustomer *int
+	err := tx.QueryRow(ctx, `update discount_codes set uses = uses + 1
+		where code = $1 and active and (max_uses is null or uses < max_uses)
+		  and (starts_at is null or starts_at <= now()) and (ends_at is null or ends_at > now())
+		returning per_customer_limit`, code).Scan(&perCustomer)
+	if err != nil {
+		return httpx.Unprocessable("discount_exhausted", "That code is no longer available.")
+	}
+	if perCustomer == nil {
+		return nil
+	}
+	if _, err := tx.Exec(ctx, `select pg_advisory_xact_lock(hashtext($1))`, code+"|"+email); err != nil {
+		return err
+	}
+	var used int
+	if err := tx.QueryRow(ctx, `select count(*) from orders where discount_code = $1 and status <> 'cancelled'
+		and (lower(email) = $2 or ($3::uuid is not null and user_id = $3))`, code, email, userID).Scan(&used); err != nil {
+		return err
+	}
+	if used >= *perCustomer {
+		return httpx.Unprocessable("discount_used", "You have already used this code.")
+	}
+	return nil
+}
+
+// releaseDiscount gives back a use when an unpaid order is cancelled or expires.
+func releaseDiscount(ctx context.Context, tx pgx.Tx, code *string) error {
+	if code == nil {
+		return nil
+	}
+	_, err := tx.Exec(ctx, `update discount_codes set uses = greatest(uses - 1, 0) where code = $1`, *code)
+	return err
+}
+
+// OrderAccessHash returns the stored hash of the guest access token.
+func (s *Store) OrderAccessHash(ctx context.Context, id string) string {
+	var h *string
+	_ = s.db.QueryRow(ctx, `select access_token_hash from orders where id = $1`, strings.ToUpper(id)).Scan(&h)
+	return deref(h)
 }
 
 const orderCols = `o.id, o.user_id, o.email, o.status, o.payment_status, o.subtotal, o.discount, o.delivery, o.total, o.currency, o.discount_code,
@@ -335,6 +433,11 @@ func (s *Store) UpdateOrderStatus(ctx context.Context, id, status string) (*Orde
 		if _, err := tx.Exec(ctx, `update orders set `+set+` where id = $1`, id, status); err != nil {
 			return err
 		}
+		if status == "cancelled" && cur.Status == "pending_payment" {
+			if err := releaseDiscount(ctx, tx, cur.DiscountCode); err != nil {
+				return err
+			}
+		}
 		if status == "cancelled" || status == "refunded" {
 			for _, l := range cur.Lines {
 				if _, err := tx.Exec(ctx, `update product_sizes set stock = stock + $2 where sku = $1`, l.SKU, l.Qty); err != nil {
@@ -363,54 +466,89 @@ func (s *Store) SetTracking(ctx context.Context, id, carrier, number, url string
 	return s.OrderByID(ctx, id)
 }
 
-func (s *Store) ExpireUnpaidOrders(ctx context.Context) (int64, error) {
-	var n int64
+type UnpaidOrder struct {
+	ID     string
+	Intent *string
+}
+
+// StaleUnpaid lists pending orders older than age; the caller cancels their
+// PaymentIntents first, then expires them (releasing reserved stock).
+func (s *Store) StaleUnpaid(ctx context.Context, age time.Duration) ([]UnpaidOrder, error) {
+	rows, err := s.db.Query(ctx, `select id, stripe_payment_intent from orders
+		where status = 'pending_payment' and created_at < now() - make_interval(secs => $1) order by created_at limit 200`, age.Seconds())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []UnpaidOrder
+	for rows.Next() {
+		var o UnpaidOrder
+		if err := rows.Scan(&o.ID, &o.Intent); err != nil {
+			return nil, err
+		}
+		out = append(out, o)
+	}
+	return out, rows.Err()
+}
+
+// ExpireOrder cancels a still-unpaid order: restocks its lines (sample
+// included) and gives back its discount use. No-op if it was paid meanwhile.
+func (s *Store) ExpireOrder(ctx context.Context, id string) (bool, error) {
+	done := false
 	err := s.Tx(ctx, func(tx pgx.Tx) error {
-		rows, err := tx.Query(ctx, `select id from orders where status = 'pending_payment' and created_at < now() - interval '24 hours'`)
+		var code *string
+		err := tx.QueryRow(ctx, `update orders set status = 'cancelled', payment_status = 'expired'
+			where id = $1 and status = 'pending_payment' returning discount_code`, id).Scan(&code)
+		if err == pgx.ErrNoRows {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
-		var ids []string
-		for rows.Next() {
-			var id string
-			if err := rows.Scan(&id); err != nil {
-				rows.Close()
-				return err
-			}
-			ids = append(ids, id)
+		if _, err := tx.Exec(ctx, `update product_sizes s set stock = s.stock + i.qty from order_items i where i.order_id = $1 and i.sku = s.sku`, id); err != nil {
+			return err
 		}
-		rows.Close()
-		for _, id := range ids {
-			if _, err := tx.Exec(ctx, `update product_sizes s set stock = s.stock + i.qty from order_items i where i.order_id = $1 and i.sku = s.sku`, id); err != nil {
-				return err
-			}
-			if _, err := tx.Exec(ctx, `update orders set status = 'cancelled', payment_status = 'expired' where id = $1`, id); err != nil {
-				return err
-			}
-			n++
-		}
-		return nil
+		done = true
+		return releaseDiscount(ctx, tx, code)
 	})
-	return n, err
+	return done, err
 }
 
 // ── Idempotency ──────────────────────────────────────────────────────────────
 
-func (s *Store) IdempotentResponse(ctx context.Context, key, scope string) (int, json.RawMessage, bool, error) {
+// IdempotentResponse returns a stored response for key. The fingerprint (hash
+// of the request body and caller) must match: a key cannot be replayed by
+// someone else or reused for a different basket.
+func (s *Store) IdempotentResponse(ctx context.Context, key, scope, fingerprint string) (int, json.RawMessage, bool, error) {
 	var status int
 	var body json.RawMessage
-	err := s.db.QueryRow(ctx, `select status_code, response from idempotency_keys where key = $1 and scope = $2`, key, scope).Scan(&status, &body)
+	var fp *string
+	err := s.db.QueryRow(ctx, `select status_code, response, fingerprint from idempotency_keys where key = $1 and scope = $2`, key, scope).Scan(&status, &body, &fp)
 	if err == pgx.ErrNoRows {
 		return 0, nil, false, nil
 	}
-	return status, body, err == nil, err
+	if err != nil {
+		return 0, nil, false, err
+	}
+	if fp == nil || *fp != fingerprint {
+		return 0, nil, false, httpx.Unprocessable("idempotency_mismatch", "This request does not match the original one. Please refresh and try again.")
+	}
+	return status, body, true, nil
 }
 
-func (s *Store) SaveIdempotent(ctx context.Context, key, scope string, status int, body any) {
-	_, _ = s.db.Exec(ctx, `insert into idempotency_keys (key, scope, status_code, response) values ($1,$2,$3,$4) on conflict do nothing`, key, scope, status, jsonb(body))
+func (s *Store) SaveIdempotent(ctx context.Context, key, scope, fingerprint string, status int, body any) {
+	_, _ = s.db.Exec(ctx, `insert into idempotency_keys (key, scope, status_code, response, fingerprint) values ($1,$2,$3,$4,$5) on conflict do nothing`,
+		key, scope, status, jsonb(body), fingerprint)
 }
 
 // ── Payment events ───────────────────────────────────────────────────────────
+
+// PaymentEventSeen reports whether a Stripe event was already processed.
+func (s *Store) PaymentEventSeen(ctx context.Context, stripeID string) bool {
+	var seen bool
+	_ = s.db.QueryRow(ctx, `select exists(select 1 from payment_events where stripe_id = $1)`, stripeID).Scan(&seen)
+	return seen
+}
 
 // RecordPaymentEvent returns false when the Stripe event was already processed.
 func (s *Store) RecordPaymentEvent(ctx context.Context, stripeID, typ string, orderID *string, payload []byte) (bool, error) {

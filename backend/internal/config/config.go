@@ -37,11 +37,20 @@ type Config struct {
 	// PAYMENTS_MODE=mock is set explicitly, so a live shop can never hand out
 	// free orders by accident.
 	PaymentsMode string
+
+	// TrustProxy: "cloudflare" | "xff-last" | "" — see httpx.TrustProxy.
+	TrustProxy string
+	// CookieSameSite for the refresh-token cookie: "Strict" when the storefront
+	// and API share a site (celestialoud.com / api.celestialoud.com), "None"
+	// only for cross-site preview hosts.
+	CookieSameSite string
+	CookieSecure   bool
 }
 
 func Load() (Config, error) {
 	c := Config{
-		Env:             get("APP_ENV", "development"),
+		// Unset APP_ENV means production: safe defaults unless a developer opts out.
+		Env:             get("APP_ENV", "production"),
 		Port:            get("PORT", "8080"),
 		DatabaseURL:     os.Getenv("DATABASE_URL"),
 		JWTSecret:       os.Getenv("JWT_SECRET"),
@@ -61,6 +70,15 @@ func Load() (Config, error) {
 
 		CronSecret:        os.Getenv("CRON_SECRET"),
 		IdealPostcodesKey: os.Getenv("IDEAL_POSTCODES_KEY"),
+
+		TrustProxy:     strings.ToLower(os.Getenv("TRUST_PROXY")),
+		CookieSameSite: get("COOKIE_SAMESITE", "Strict"),
+	}
+	c.CookieSecure = c.Env == "production" || strings.HasPrefix(c.APIURL, "https://")
+	switch c.TrustProxy {
+	case "", "cloudflare", "xff-last":
+	default:
+		return c, fmt.Errorf("TRUST_PROXY must be cloudflare, xff-last or empty")
 	}
 	switch {
 	case c.StripeSecretKey != "":
@@ -79,8 +97,12 @@ func Load() (Config, error) {
 		}
 		c.JWTSecret = "dev-secret-change-me"
 	}
-	if len(c.JWTSecret) < 16 && c.Env == "production" {
-		return c, fmt.Errorf("JWT_SECRET must be at least 16 characters")
+	if len(c.JWTSecret) < 32 && c.Env == "production" {
+		return c, fmt.Errorf("JWT_SECRET must be at least 32 characters")
+	}
+	if c.Env == "production" && c.PaymentsMode == "mock" {
+		// Allowed only for explicit test hosts; logged loudly at boot.
+		fmt.Fprintln(os.Stderr, "WARNING: PAYMENTS_MODE=mock in production — orders are marked paid without charging.")
 	}
 	return c, nil
 }

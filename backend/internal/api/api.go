@@ -36,20 +36,23 @@ func (a *API) Router() http.Handler {
 	r := chi.NewRouter()
 	r.Use(httpx.Recoverer, httpx.RequestLogger(a.log), httpx.SecurityHeaders, middleware.Timeout(30*time.Second))
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   a.cfg.CORSOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id"},
-		ExposedHeaders:   []string{"X-Request-Id"},
-		AllowCredentials: false,
+		AllowedOrigins: a.cfg.CORSOrigins,
+		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id"},
+		ExposedHeaders: []string{"X-Request-Id", "Retry-After"},
+		// Credentials only for the HttpOnly refresh cookie; origins are an explicit list.
+		AllowCredentials: true,
 		MaxAge:           600,
 	}))
 	r.Use(a.auth.Middleware)
+	// Coarse per-instance flood guard; precise limits are per route below.
+	r.Use(httpx.NewRateLimiter(600, time.Minute).Middleware)
 
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { httpx.JSON(w, 200, map[string]string{"status": "ok"}) })
 	r.Get("/readyz", a.ready)
 
-	authLimiter := httpx.NewRateLimiter(20, time.Minute)
-	writeLimiter := httpx.NewRateLimiter(60, time.Minute)
+	ip := a.perIP
+	user := a.perUser
 
 	r.Route("/v1", func(r chi.Router) {
 		// ── Public catalogue & content ──
@@ -59,35 +62,35 @@ func (a *API) Router() http.Handler {
 		r.Get("/products/{slug}", a.getProduct)
 		r.Get("/products/{slug}/related", a.related)
 		r.Get("/products/{slug}/reviews", a.listReviews)
-		r.With(auth.Require, writeLimiter.Middleware).Post("/products/{slug}/reviews", a.submitReview)
-		r.With(writeLimiter.Middleware).Post("/products/{slug}/notify", a.notifyStock)
+		r.With(auth.Require, user("review")).Post("/products/{slug}/reviews", a.submitReview)
+		r.With(ip("notify")).Post("/products/{slug}/notify", a.notifyStock)
 		r.Get("/notes", a.listNotes)
 		r.Get("/delivery-methods", a.deliveryMethods)
-		r.Get("/address/lookup", a.lookupPostcode)
-		r.With(writeLimiter.Middleware).Post("/discounts/validate", a.validateDiscount)
+		r.With(ip("postcode")).Get("/address/lookup", a.lookupPostcode)
+		r.With(ip("discount")).Post("/discounts/validate", a.validateDiscount)
 		r.Get("/content/faqs", a.faqs)
 		r.Get("/content/{key}", a.contentBlock)
 		r.Get("/blog", a.listBlog)
 		r.Get("/blog/{slug}", a.getBlog)
 		r.Get("/settings", a.publicSettings)
-		r.With(writeLimiter.Middleware).Post("/newsletter", a.subscribe)
-		r.With(writeLimiter.Middleware).Post("/newsletter/unsubscribe", a.unsubscribe)
-		r.With(writeLimiter.Middleware).Post("/contact", a.contact)
+		r.With(ip("newsletter")).Post("/newsletter", a.subscribe)
+		r.With(ip("unsubscribe")).Post("/newsletter/confirm", a.confirmSubscription)
+		r.With(ip("unsubscribe")).Post("/newsletter/unsubscribe", a.unsubscribe)
+		r.With(ip("contact")).Post("/contact", a.contact)
 
 		// ── Orders ──
-		r.With(writeLimiter.Middleware).Post("/orders", a.createOrder)
-		r.Get("/orders/{id}", a.getOrder)
-		r.Post("/orders/{id}/confirm", a.confirmOrder)
+		r.With(ip("order")).Post("/orders", a.createOrder)
+		r.With(ip("order-read")).Get("/orders/{id}", a.getOrder)
+		r.With(ip("order-read")).Post("/orders/{id}/confirm", a.confirmOrder)
 
 		// ── Auth ──
 		r.Route("/auth", func(r chi.Router) {
-			r.Use(authLimiter.Middleware)
-			r.Post("/register", a.register)
-			r.Post("/login", a.login)
-			r.Post("/refresh", a.refresh)
-			r.Post("/logout", a.logout)
-			r.Post("/forgot", a.forgot)
-			r.Post("/reset", a.reset)
+			r.With(ip("register")).Post("/register", a.register)
+			r.With(ip("login")).Post("/login", a.login)
+			r.With(ip("refresh")).Post("/refresh", a.refresh)
+			r.With(ip("logout")).Post("/logout", a.logout)
+			r.With(ip("forgot")).Post("/forgot", a.forgot)
+			r.With(ip("reset")).Post("/reset", a.reset)
 		})
 
 		// ── Account ──
@@ -95,9 +98,9 @@ func (a *API) Router() http.Handler {
 			r.Use(auth.Require)
 			r.Get("/", a.me)
 			r.Patch("/", a.updateMe)
-			r.Delete("/", a.deleteMe)
-			r.Post("/password", a.changePassword)
-			r.Get("/export", a.exportMe)
+			r.With(user("password")).Delete("/", a.deleteMe)
+			r.With(user("password")).Post("/password", a.changePassword)
+			r.With(user("gdpr")).Get("/export", a.exportMe)
 			r.Get("/orders", a.myOrders)
 			r.Get("/addresses", a.myAddresses)
 			r.Post("/addresses", a.saveAddress)
@@ -111,7 +114,7 @@ func (a *API) Router() http.Handler {
 
 		// ── Admin ──
 		r.Route("/admin", func(r chi.Router) {
-			r.Use(auth.RequireRole("viewer"))
+			r.Use(auth.RequireRole("viewer"), a.writesOnly("admin-write"), a.auditWrites)
 			a.adminRoutes(r)
 		})
 	})
@@ -129,7 +132,8 @@ func (a *API) Router() http.Handler {
 
 func (a *API) ready(w http.ResponseWriter, r *http.Request) {
 	if _, err := a.st.Settings(r.Context()); err != nil {
-		httpx.JSON(w, 503, map[string]string{"status": "degraded", "error": err.Error()})
+		httpx.Logger(r).Error("readiness", "err", err)
+		httpx.JSON(w, 503, map[string]string{"status": "degraded"})
 		return
 	}
 	httpx.JSON(w, 200, map[string]string{"status": "ready"})

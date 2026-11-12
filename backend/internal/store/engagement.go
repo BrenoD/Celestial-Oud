@@ -67,6 +67,10 @@ func (s *Store) SubmitReview(ctx context.Context, slug string, userID *string, i
 	if in.Author == "" {
 		return nil, httpx.BadRequest("A name is required.")
 	}
+	if err := httpx.CheckLengths(httpx.Limit{Name: "Name", Value: in.Author, Max: 60}, httpx.Limit{Name: "Title", Value: deref(in.Title), Max: 120},
+		httpx.Limit{Name: "Review", Value: deref(in.Body), Max: 2000}, httpx.Limit{Name: "Longevity", Value: deref(in.Longevity), Max: 40}); err != nil {
+		return nil, err
+	}
 	var pid int64
 	if err := s.db.QueryRow(ctx, `select id from products where slug = $1`, slug).Scan(&pid); err != nil {
 		return nil, notFound(err)
@@ -115,24 +119,73 @@ func (s *Store) DeleteReview(ctx context.Context, id int64) error {
 
 // ── Newsletter & stock alerts ────────────────────────────────────────────────
 
-func (s *Store) Subscribe(ctx context.Context, email, name, source string) (bool, error) {
-	email = strings.ToLower(strings.TrimSpace(email))
-	if !strings.Contains(email, "@") {
-		return false, httpx.BadRequest("Please enter a valid email address.")
-	}
-	var created time.Time
-	err := s.db.QueryRow(ctx, `insert into newsletter_subs (email, name, source, confirmed_at) values ($1, nullif($2,''), nullif($3,''), now())
-		on conflict (email) do update set unsubscribed_at = null, name = coalesce(excluded.name, newsletter_subs.name) returning created_at`,
-		email, strings.TrimSpace(name), source).Scan(&created)
+// Subscribe records a pending (unconfirmed) subscription with the hash of a
+// confirmation token. It reports whether a confirmation email is needed
+// (false for an already-confirmed, active subscriber). Double opt-in keeps the
+// list PECR-compliant and stops anyone signing up someone else.
+func (s *Store) Subscribe(ctx context.Context, email, name, source, tokenHash string) (bool, error) {
+	var confirmed, unsub *time.Time
+	err := s.db.QueryRow(ctx, `insert into newsletter_subs (email, name, source, confirm_token_hash, unsubscribe_token)
+		values ($1, nullif($2,''), nullif($3,''), $4, replace(gen_random_uuid()::text,'-','') || replace(gen_random_uuid()::text,'-',''))
+		on conflict (email) do update set
+		  name = coalesce(excluded.name, newsletter_subs.name),
+		  confirm_token_hash = case when newsletter_subs.confirmed_at is null or newsletter_subs.unsubscribed_at is not null
+		                            then excluded.confirm_token_hash else newsletter_subs.confirm_token_hash end
+		returning confirmed_at, unsubscribed_at`, email, strings.TrimSpace(name), source, tokenHash).Scan(&confirmed, &unsub)
 	if err != nil {
 		return false, err
 	}
-	return time.Since(created) < 5*time.Second, nil
+	return confirmed == nil || unsub != nil, nil
 }
 
-func (s *Store) Unsubscribe(ctx context.Context, email string) error {
-	_, err := s.db.Exec(ctx, `update newsletter_subs set unsubscribed_at = now() where email = lower($1)`, email)
-	return err
+// ConfirmSubscription activates the subscription for a confirmation token and
+// returns the email, name and whether this was the first confirmation.
+func (s *Store) ConfirmSubscription(ctx context.Context, tokenHash string) (string, string, bool, error) {
+	var email string
+	var name *string
+	var was bool
+	err := s.db.QueryRow(ctx, `update newsletter_subs n set confirmed_at = coalesce(n.confirmed_at, now()), unsubscribed_at = null, confirm_token_hash = null
+		from (select email, confirmed_at is not null as was from newsletter_subs where confirm_token_hash = $1) o
+		where n.email = o.email returning n.email, n.name, o.was`, tokenHash).Scan(&email, &name, &was)
+	if err != nil {
+		return "", "", false, httpx.E(404, "invalid_token", "This confirmation link is invalid or has already been used.")
+	}
+	return email, deref(name), !was, nil
+}
+
+// Unsubscribe uses the per-subscriber token from the email footer.
+func (s *Store) Unsubscribe(ctx context.Context, token string) error {
+	if len(token) < 32 {
+		return httpx.E(404, "invalid_token", "This unsubscribe link is invalid.")
+	}
+	tag, err := s.db.Exec(ctx, `update newsletter_subs set unsubscribed_at = coalesce(unsubscribed_at, now()) where unsubscribe_token = $1`, token)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return httpx.E(404, "invalid_token", "This unsubscribe link is invalid.")
+	}
+	return nil
+}
+
+// ActiveSubscribers returns confirmed, still-subscribed recipients among
+// emails, mapped to their unsubscribe tokens.
+func (s *Store) ActiveSubscribers(ctx context.Context, emails []string) (map[string]string, error) {
+	rows, err := s.db.Query(ctx, `select email, unsubscribe_token from newsletter_subs
+		where confirmed_at is not null and unsubscribed_at is null and email = any($1)`, emails)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]string{}
+	for rows.Next() {
+		var e, t string
+		if err := rows.Scan(&e, &t); err != nil {
+			return nil, err
+		}
+		out[e] = t
+	}
+	return out, rows.Err()
 }
 
 func (s *Store) ListSubscribers(ctx context.Context) ([]NewsletterSub, error) {
@@ -156,9 +209,9 @@ func (s *Store) ListSubscribers(ctx context.Context) ([]NewsletterSub, error) {
 }
 
 func (s *Store) NotifyStock(ctx context.Context, sku, email string) error {
-	email = strings.ToLower(strings.TrimSpace(email))
-	if !strings.Contains(email, "@") {
-		return httpx.BadRequest("Please enter a valid email address.")
+	email, ok := httpx.NormEmail(email)
+	if !ok {
+		return httpx.InvalidEmail
 	}
 	tag, err := s.db.Exec(ctx, `insert into stock_notifications (size_id, email) select id, $2 from product_sizes where sku = $1 on conflict do nothing`, sku, email)
 	if err != nil {
@@ -226,12 +279,18 @@ func scanMsg(row interface{ Scan(...any) error }) (Message, error) {
 }
 
 func (s *Store) CreateMessage(ctx context.Context, m Message) (Message, error) {
-	m.Name, m.Email, m.Body = strings.TrimSpace(m.Name), strings.ToLower(strings.TrimSpace(m.Email)), strings.TrimSpace(m.Body)
-	if m.Name == "" || !strings.Contains(m.Email, "@") || m.Body == "" {
-		return m, httpx.BadRequest("Name, email and message are required.")
+	m.Name, m.Body = strings.TrimSpace(m.Name), strings.TrimSpace(m.Body)
+	email, ok := httpx.NormEmail(m.Email)
+	if m.Name == "" || m.Body == "" {
+		return m, httpx.Unprocessable("missing_fields", "Name, email and message are required.")
 	}
-	if len(m.Body) > 4000 {
-		m.Body = m.Body[:4000]
+	if !ok {
+		return m, httpx.InvalidEmail
+	}
+	m.Email = email
+	if err := httpx.CheckLengths(httpx.Limit{Name: "Name", Value: m.Name, Max: 100}, httpx.Limit{Name: "Subject", Value: deref(m.Subject), Max: 150},
+		httpx.Limit{Name: "Order number", Value: deref(m.OrderID), Max: 20}, httpx.Limit{Name: "Message", Value: m.Body, Max: 5000}); err != nil {
+		return m, err
 	}
 	row := s.db.QueryRow(ctx, `insert into messages (user_id, order_id, name, email, subject, body) values ($1,$2,$3,$4,$5,$6) returning `+msgCols,
 		m.UserID, m.OrderID, m.Name, m.Email, m.Subject, m.Body)

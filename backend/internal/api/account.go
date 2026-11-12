@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -32,6 +33,15 @@ func (a *API) updateMe(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
+	if err := httpx.CheckLengths(httpx.Limit{Name: "First name", Value: deref(in.FirstName), Max: 60},
+		httpx.Limit{Name: "Last name", Value: deref(in.LastName), Max: 60}, httpx.Limit{Name: "Phone", Value: deref(in.Phone), Max: 30}); err != nil {
+		httpx.Fail(w, r, err)
+		return
+	}
+	if in.FirstName != nil && strings.TrimSpace(*in.FirstName) == "" {
+		httpx.Fail(w, r, httpx.Unprocessable("missing_name", "Enter your first name."))
+		return
+	}
 	cols := map[string]any{}
 	if in.FirstName != nil {
 		cols["first_name"] = *in.FirstName
@@ -59,6 +69,8 @@ func (a *API) updateMe(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, 200, u)
 }
 
+// changePassword signs out every other device (all refresh tokens revoked)
+// and starts a fresh session for this one.
 func (a *API) changePassword(w http.ResponseWriter, r *http.Request) {
 	var in struct{ CurrentPassword, NewPassword string }
 	if err := httpx.DecodeLoose(r, &in); err != nil {
@@ -70,6 +82,10 @@ func (a *API) changePassword(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, httpx.E(401, "wrong_password", "Your current password is incorrect."))
 		return
 	}
+	if err := auth.ValidatePassword(in.NewPassword, u.Email); err != nil {
+		httpx.Fail(w, r, err)
+		return
+	}
 	hash, err := auth.HashPassword(in.NewPassword)
 	if err != nil {
 		httpx.Fail(w, r, err)
@@ -79,14 +95,32 @@ func (a *API) changePassword(w http.ResponseWriter, r *http.Request) {
 		httpx.Fail(w, r, err)
 		return
 	}
-	httpx.NoContent(w)
-}
-
-func (a *API) deleteMe(w http.ResponseWriter, r *http.Request) {
-	if err := a.st.DeleteUser(r.Context(), httpx.UserFrom(r).ID); err != nil {
+	_ = a.st.RevokeAllRefresh(r.Context(), u.ID)
+	res, err := a.issue(w, r, u, "")
+	if err != nil {
 		httpx.Fail(w, r, err)
 		return
 	}
+	httpx.JSON(w, 200, res)
+}
+
+// deleteMe erases the account (UK GDPR). The password is required so a
+// stolen access token alone cannot delete someone's account.
+func (a *API) deleteMe(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Password string `json:"password"`
+	}
+	_ = httpx.DecodeLoose(r, &in)
+	u, err := a.st.UserByID(r.Context(), httpx.UserFrom(r).ID)
+	if err != nil || !auth.CheckPassword(u.PasswordHash, in.Password) {
+		httpx.Fail(w, r, httpx.E(401, "wrong_password", "Enter your current password to delete your account."))
+		return
+	}
+	if err := a.st.DeleteUser(r.Context(), u.ID); err != nil {
+		httpx.Fail(w, r, err)
+		return
+	}
+	a.setRefreshCookie(w, "", -1)
 	httpx.NoContent(w)
 }
 
@@ -132,11 +166,8 @@ func (a *API) saveAddress(w http.ResponseWriter, r *http.Request) {
 		}
 		in.ID = n
 	}
-	if in.Country == "" {
-		in.Country = "GB"
-	}
-	if in.Line1 == "" || in.City == "" || in.Postcode == "" {
-		httpx.Fail(w, r, httpx.BadRequest("Address line 1, town and postcode are required."))
+	if err := validateAddress(&in); err != nil {
+		httpx.Fail(w, r, err)
 		return
 	}
 	out, err := a.st.UpsertAddress(r.Context(), httpx.UserFrom(r).ID, in)
