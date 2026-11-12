@@ -36,6 +36,7 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/celestial?sslmode=disable
           PORT: '8090'
           CRON_SECRET: ci
+          APP_ENV: development
         run: |
           /tmp/api & sleep 3
           curl -fsS localhost:8090/readyz
