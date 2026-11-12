@@ -77,8 +77,14 @@
   color: var(--muted-2);
   border-radius: var(--radius);
 }
-.nav-group__btn[aria-expanded='true'] {
+.nav-group__btn:hover {
+  background: var(--white);
   color: var(--espresso);
+}
+/* Open group: filled header, so it is obvious which section is expanded. */
+.nav-group__btn[aria-expanded='true'] {
+  background: var(--espresso);
+  color: var(--white);
 }
 .nav-group__arrow {
   margin-left: auto;
@@ -94,7 +100,38 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-left: 10px;
+  margin: 4px 0 8px 10px;
+  padding-left: 8px;
+  border-left: 2px solid var(--bronze);
+}
+.nav-group__items > a {
+  animation: adm-item 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.nav-group__items > a:nth-child(2) {
+  animation-delay: 0.03s;
+}
+.nav-group__items > a:nth-child(3) {
+  animation-delay: 0.06s;
+}
+.nav-group__items > a:nth-child(4) {
+  animation-delay: 0.09s;
+}
+.nav-group__items > a:nth-child(5) {
+  animation-delay: 0.12s;
+}
+.nav-group__items > a:nth-child(6) {
+  animation-delay: 0.15s;
+}
+@keyframes adm-item {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-group__items > a {
+    animation: none;
+  }
 }
 .nav-group__items a {
   display: flex;
@@ -442,8 +479,26 @@
   max-height: calc(100vh - 48px);
   color: var(--espresso);
 }
+.modal[open] {
+  box-shadow: 0 24px 80px rgba(15, 12, 10, 0.45);
+  border-top: 4px solid var(--bronze);
+  animation: adm-pop 0.26s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+}
 .modal::backdrop {
-  background: rgba(15, 12, 10, 0.4);
+  background: rgba(46, 29, 21, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+@keyframes adm-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal[open] {
+    animation: none;
+  }
 }
 .modal__head {
   display: flex;

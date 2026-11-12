@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useProducts } from '@/api/hooks';
 import { ProductCard, ProductCardSkeleton } from '@/components/ui/ProductCard';
+import { useOverlay } from '@/lib/useOverlay';
 import { Seo } from '@/components/ui/Seo';
 import type { ProductQuery, ScentFamily, Wear } from '@/types';
 import { collections } from '@/data/catalogue';
@@ -67,6 +68,64 @@ function useFilters() {
   return { sp, get, toggle, set, clear };
 }
 
+type Filters = ReturnType<typeof useFilters>;
+
+function Fieldset({ f, legend, name, options }: { f: Filters; legend: string; name: string; options: Array<[string, string]> }) {
+  return (
+    <fieldset className="filters__group">
+      <legend>{legend}</legend>
+      {options.map(([v, label]) => (
+        <label key={v} className="check">
+          <input type="checkbox" checked={f.get(name).includes(v)} onChange={() => f.toggle(name, v)} /> {label}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+/** Module-level so checkboxes keep focus between renders (keyboard users). */
+function FilterGroups({ f }: { f: Filters }) {
+  return (
+    <>
+      <Fieldset f={f} legend="Scent family" name="family" options={FAMILIES} />
+      <Fieldset f={f} legend="Key notes" name="notes" options={NOTES.map((n) => [n, n[0].toUpperCase() + n.slice(1)])} />
+      <Fieldset f={f} legend="Size" name="size" options={SIZES.map((s) => [String(s), s === 2 ? '2ml sample' : `${s}ml`])} />
+      <Fieldset f={f} legend="Price" name="price" options={PRICES} />
+      <Fieldset f={f} legend="Wear" name="wear" options={WEAR} />
+    </>
+  );
+}
+
+/** Mobile filters: a bottom sheet over a dimmed page with a live result count. */
+function FilterSheet({ f, total, active, onClose }: { f: Filters; total?: number; active: number; onClose: () => void }) {
+  const panel = useRef<HTMLDivElement>(null);
+  useOverlay(true, onClose, panel, 900);
+  return (
+    <>
+      <button type="button" className="backdrop" aria-label="Close filters" tabIndex={-1} onClick={onClose} />
+      <div ref={panel} id="filter-sheet" className="sheet sheet--bottom" role="dialog" aria-modal="true" aria-label="Filters">
+        <div className="sheet__head">
+          <p className="sheet__title">Filters{active ? ` (${active})` : ''}</p>
+          <button type="button" className="sheet__close" aria-label="Close filters" onClick={onClose} data-autofocus>
+            ✕
+          </button>
+        </div>
+        <div className="sheet__body filters filters--sheet stagger">
+          <FilterGroups f={f} />
+        </div>
+        <div className="sheet__foot">
+          <button type="button" className="btn btn--outline" onClick={f.clear} disabled={!active}>
+            Clear all
+          </button>
+          <button type="button" className="btn btn--primary" onClick={onClose}>
+            {total === undefined ? 'Show results' : `Show ${total} ${total === 1 ? 'result' : 'results'}`}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function Collection({ search = false }: { search?: boolean }) {
   const { slug = 'all' } = useParams();
   const f = useFilters();
@@ -104,17 +163,6 @@ export default function Collection({ search = false }: { search?: boolean }) {
     ...f.get('wear').map((v) => ({ k: 'wear', v, label: WEAR.find((x) => x[0] === v)?.[1] ?? v })),
   ];
 
-  const Fieldset = ({ legend, name, options }: { legend: string; name: string; options: Array<[string, string]> }) => (
-    <fieldset className="filters__group">
-      <legend>{legend}</legend>
-      {options.map(([v, label]) => (
-        <label key={v} className="check">
-          <input type="checkbox" checked={f.get(name).includes(v)} onChange={() => f.toggle(name, v)} /> {label}
-        </label>
-      ))}
-    </fieldset>
-  );
-
   return (
     <main className="container page">
       <Seo title={title} description={intro} />
@@ -139,15 +187,12 @@ export default function Collection({ search = false }: { search?: boolean }) {
       </div>
 
       <div className="plp">
-        <button type="button" className="btn btn--outline plp__filter-toggle" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((v) => !v)}>
-          {filtersOpen ? 'Hide filters' : `Filters${active.length ? ` (${active.length})` : ''}`}
+        <button type="button" className="btn btn--outline plp__filter-toggle" aria-expanded={filtersOpen} aria-controls="filter-sheet" onClick={() => setFiltersOpen(true)}>
+          {`Filters${active.length ? ` (${active.length})` : ''}`}
         </button>
-        <aside aria-label="Filters" className={`filters${filtersOpen ? ' is-open' : ''}`}>
-          <Fieldset legend="Scent family" name="family" options={FAMILIES} />
-          <Fieldset legend="Key notes" name="notes" options={NOTES.map((n) => [n, n[0].toUpperCase() + n.slice(1)])} />
-          <Fieldset legend="Size" name="size" options={SIZES.map((s) => [String(s), s === 2 ? '2ml sample' : `${s}ml`])} />
-          <Fieldset legend="Price" name="price" options={PRICES} />
-          <Fieldset legend="Wear" name="wear" options={WEAR} />
+        {filtersOpen && <FilterSheet f={f} total={data?.total} active={active.length} onClose={() => setFiltersOpen(false)} />}
+        <aside aria-label="Filters" className="filters">
+          <FilterGroups f={f} />
         </aside>
 
         <div className="plp__results" aria-busy={isFetching}>

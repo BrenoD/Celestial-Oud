@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useOverlay } from '@/lib/useOverlay';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useBasketStore, selectCount } from '@/store/basket';
 import { useWishlistStore } from '@/store/wishlist';
@@ -6,6 +7,51 @@ import { BagIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon } from '@
 import { Logo } from './Logo';
 import { NAV } from './nav';
 import './Header.css';
+
+/** Mobile menu: a full-height drawer over a dimmed page (rendered only while open). */
+function MobileMenu({ onClose, count, wishCount }: { onClose: () => void; count: number; wishCount: number }) {
+  const panel = useRef<HTMLDivElement>(null);
+  useOverlay(true, onClose, panel, 900);
+  return (
+    <>
+      <button type="button" className="backdrop" aria-label="Close menu" tabIndex={-1} onClick={onClose} />
+      <div ref={panel} id="mobile-menu" className="sheet sheet--left mnav" role="dialog" aria-modal="true" aria-label="Menu">
+        <div className="sheet__head">
+          <p className="sheet__title">Menu</p>
+          <button type="button" className="sheet__close" aria-label="Close menu" onClick={onClose} data-autofocus>
+            <CloseIcon />
+          </button>
+        </div>
+        <nav aria-label="Main" className="sheet__body">
+          <ul className="mnav__list stagger">
+            {NAV.map((n, i) => (
+              <li key={n.to} style={{ ['--i' as string]: i }}>
+                <NavLink to={n.to} className={({ isActive }) => `mnav__link${n.accent ? ' mnav__link--accent' : ''}${isActive ? ' is-active' : ''}`}>
+                  {n.label}
+                  <span aria-hidden="true" className="mnav__arrow">→</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+          <ul className="mnav__secondary stagger">
+            <li style={{ ['--i' as string]: NAV.length }}>
+              <Link to="/account">My account</Link>
+            </li>
+            <li style={{ ['--i' as string]: NAV.length + 1 }}>
+              <Link to="/wishlist">Wishlist{wishCount ? ` (${wishCount})` : ''}</Link>
+            </li>
+            <li style={{ ['--i' as string]: NAV.length + 2 }}>
+              <Link to="/basket">Basket{count ? ` (${count})` : ''}</Link>
+            </li>
+            <li style={{ ['--i' as string]: NAV.length + 3 }}>
+              <Link to="/help">Help & contact</Link>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </>
+  );
+}
 
 export function Header() {
   const count = useBasketStore(selectCount);
@@ -26,7 +72,7 @@ export function Header() {
   return (
     <header className="hdr">
       <div className="container hdr__top">
-        <button type="button" className="hdr__burger" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen((v) => !v)}>
+        <button type="button" className={`hdr__burger${menuOpen ? ' is-on' : ''}`} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={() => setMenuOpen((v) => !v)}>
           {menuOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
         <Logo />
@@ -62,7 +108,8 @@ export function Header() {
           </Link>
         </nav>
       </div>
-      <nav aria-label="Main" className={`hdr__nav${menuOpen ? ' is-open' : ''}`}>
+      {menuOpen && <MobileMenu onClose={() => setMenuOpen(false)} count={count} wishCount={wishCount} />}
+      <nav aria-label="Main" className="hdr__nav">
         <div className="container hdr__nav-inner">
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} className={({ isActive }) => `hdr__link${n.accent ? ' hdr__link--accent' : ''}${isActive ? ' is-active' : ''}`}>

@@ -21,7 +21,7 @@ export function Accordion({ items, defaultOpen = null, size = 'md' }: Props) {
         const isOpen = open === it.id;
         const panelId = `acc-${it.id}`;
         return (
-          <div className="accordion__item" key={it.id}>
+          <div className={`accordion__item${isOpen ? ' is-open' : ''}`} key={it.id}>
             <button
               type="button"
               className="accordion__trigger"
@@ -30,15 +30,12 @@ export function Accordion({ items, defaultOpen = null, size = 'md' }: Props) {
               onClick={() => setOpen(isOpen ? null : it.id)}
             >
               {it.title}
-              <span aria-hidden="true" className="accordion__sign">
-                {isOpen ? '−' : '+'}
-              </span>
+              <span aria-hidden="true" className="accordion__sign" />
             </button>
-            {isOpen && (
-              <div id={panelId} className="accordion__panel">
-                {it.body}
-              </div>
-            )}
+            {/* Always rendered so it can animate open; inert while closed (not focusable or read out). */}
+            <div id={panelId} className="accordion__panel" role="region" aria-label={it.title} {...(isOpen ? {} : { inert: '' })}>
+              <div className="accordion__inner">{it.body}</div>
+            </div>
           </div>
         );
       })}

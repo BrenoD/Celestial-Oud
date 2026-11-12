@@ -96,9 +96,9 @@
   }
   .filters {
     display: none;
-    flex-basis: 100%;
   }
-  .filters.is-open {
+  .filters.filters--sheet {
     display: flex;
+    flex-basis: auto;
   }
 }

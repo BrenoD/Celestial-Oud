@@ -11,17 +11,53 @@
   align-items: center;
   gap: 16px;
   font-size: 14px;
-  box-shadow: 0 10px 30px rgba(15, 12, 10, 0.3);
-  animation: toast-in 0.2s ease-out;
+  box-shadow: 0 18px 50px rgba(15, 12, 10, 0.45);
+  border-left: 4px solid var(--bronze-light);
+  overflow: hidden;
+  animation: toast-in 0.38s cubic-bezier(0.2, 0.9, 0.25, 1.25) both;
+}
+.toast__tick {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bronze-light);
+  color: var(--espresso);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  animation: ov-pop 0.5s 0.2s ease-out both;
+}
+.toast__text {
+  flex: 1;
+}
+/* Shows how long the message stays. */
+.toast__timer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--bronze-light);
+  transform-origin: left;
+  animation: toast-timer 3.5s linear both;
 }
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-24px) scale(0.96);
   }
+}
+@keyframes toast-timer {
   to {
-    opacity: 1;
-    transform: none;
+    transform: scaleX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast__tick {
+    animation: ov-fade 0.12s both;
   }
 }
 @media (max-width: 640px) {

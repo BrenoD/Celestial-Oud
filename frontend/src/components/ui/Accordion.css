@@ -4,6 +4,16 @@
 }
 .accordion__item {
   border-bottom: 1px solid var(--line-3);
+  border-left: 3px solid transparent;
+  transition: background 0.2s, border-color 0.2s;
+}
+/* The open item is unmistakable: tinted, bronze edge, heading in bronze. */
+.accordion__item.is-open {
+  background: var(--ivory);
+  border-left-color: var(--bronze);
+}
+.accordion__item.is-open .accordion__trigger {
+  color: var(--bronze-dark);
 }
 .accordion__trigger {
   width: 100%;
@@ -18,7 +28,11 @@
   font-weight: 600;
   color: var(--espresso);
   text-align: left;
-  padding: 0;
+  padding: 0 12px;
+  cursor: pointer;
+}
+.accordion__trigger:hover {
+  background: var(--ivory);
 }
 .accordion--lg .accordion__trigger {
   min-height: 54px;
@@ -28,15 +42,63 @@
 .accordion--lg .accordion__item {
   border-color: var(--line);
 }
+/* Plus that turns into a cross inside a filled circle. */
 .accordion__sign {
-  font-size: 20px;
-  font-weight: 400;
+  position: relative;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line-3);
+  transition: transform 0.25s, background 0.2s, border-color 0.2s;
+}
+.accordion__sign::before,
+.accordion__sign::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 2px;
+  margin: -1px 0 0 -6px;
+  background: currentColor;
+}
+.accordion__sign::after {
+  transform: rotate(90deg);
+}
+.is-open .accordion__sign {
+  transform: rotate(135deg);
+  background: var(--espresso);
+  border-color: var(--espresso);
+  color: var(--white);
 }
 .accordion__panel {
-  margin: 0 0 16px;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
   font-size: 14px;
   line-height: 1.6;
   color: var(--muted);
+}
+.is-open > .accordion__panel {
+  grid-template-rows: 1fr;
+}
+.accordion__inner {
+  overflow: hidden;
+  padding: 0 12px;
+}
+.is-open .accordion__inner {
+  padding-bottom: 16px;
+  animation: ov-item 0.32s 0.05s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .accordion__panel,
+  .accordion__sign {
+    transition: none;
+  }
+  .is-open .accordion__inner {
+    animation: none;
+  }
 }
 .accordion--lg .accordion__panel {
   font-size: 15px;

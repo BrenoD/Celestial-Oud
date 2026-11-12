@@ -15,6 +15,7 @@ import '@fontsource/cinzel/latin-600.css';
 import './styles/fonts.css';
 import './styles/global.css';
 import './styles/layout.css';
+import './styles/overlay.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
