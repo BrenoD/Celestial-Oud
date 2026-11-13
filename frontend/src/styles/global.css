@@ -468,3 +468,17 @@ ul {
     font-size: 36px;
   }
 }
+
+/*
+ * iOS zooms into any form field whose text is smaller than 16px and the page
+ * then overflows sideways. On touch screens every field uses 16px, so focusing
+ * one never zooms (and pinch-zoom stays available: no maximum-scale).
+ * !important: this must beat every component's own field size.
+ */
+@media (pointer: coarse), (max-width: 900px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='button']):not([type='submit']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
