@@ -55,6 +55,18 @@
 .chat-sheet {
   height: min(88vh, 720px);
 }
+@media (max-width: 719px) {
+  /* Sits on top of the keyboard and never taller than what is visible. */
+  .chat-sheet.sheet--bottom {
+    bottom: var(--kb, 0px);
+    height: min(88vh, calc(var(--vvh, 100vh) - 8px));
+    max-height: none;
+    transition: bottom 0.12s ease-out, height 0.12s ease-out;
+  }
+  .chat-form__input {
+    font-size: 16px; /* below 16px iOS zooms the page when the field is focused */
+  }
+}
 @media (min-width: 720px) {
   .chat-sheet.sheet--bottom {
     left: auto;

@@ -17,10 +17,12 @@
   -webkit-backdrop-filter: blur(3px);
   animation: ov-fade 0.22s ease-out both;
   cursor: pointer;
+  touch-action: none; /* a swipe on the dimmed page never scrolls it */
 }
 
 .sheet {
   position: fixed;
+  overscroll-behavior: contain;
   z-index: 71;
   background: var(--white);
   display: flex;
@@ -54,6 +56,9 @@
   background: var(--line-3);
   margin: 10px 0 2px;
   flex: none;
+}
+.sheet:focus {
+  outline: none;
 }
 .sheet__head {
   display: flex;
@@ -91,6 +96,8 @@
 .sheet__body {
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
   flex: 1;
   padding: 8px 20px 20px;
 }

@@ -95,6 +95,28 @@ export default function ChatPanel({ onClose }: { onClose: () => void }) {
     list.current?.lastElementChild?.scrollIntoView({ block: 'end' });
   }, [messages.length]);
 
+  // Phones: the on-screen keyboard shrinks the *visual* viewport but not the
+  // layout one, so a fixed sheet would sit behind it. Track the visible area
+  // and keep the sheet (and its message box) above the keyboard.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const el = panel.current;
+    if (!vv || !el) return;
+    const fit = () => {
+      const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      el.style.setProperty('--kb', `${covered}px`);
+      el.style.setProperty('--vvh', `${vv.height}px`);
+      if (covered > 0) list.current?.lastElementChild?.scrollIntoView({ block: 'end' });
+    };
+    fit();
+    vv.addEventListener('resize', fit);
+    vv.addEventListener('scroll', fit);
+    return () => {
+      vv.removeEventListener('resize', fit);
+      vv.removeEventListener('scroll', fit);
+    };
+  }, []);
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const body = text.trim();
