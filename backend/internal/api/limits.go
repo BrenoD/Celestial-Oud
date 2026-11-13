@@ -40,6 +40,10 @@ var limits = map[string]limit{
 	"postcode":     {20, time.Hour},
 	"gdpr":         {5, time.Hour},
 	"admin-write":  {300, 10 * time.Minute},
+	"chat-start":   {5, time.Hour},
+	"chat-msg":     {15, time.Minute},       // per conversation
+	"chat-send":    {40, 10 * time.Minute},  // per IP, all conversations
+	"chat-read":    {400, 10 * time.Minute}, // polling every few seconds
 }
 
 // subjectKey hashes a subject (email, user id) so no personal data sits in

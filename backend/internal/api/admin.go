@@ -64,6 +64,12 @@ func (a *API) adminRoutes(r chi.Router) {
 	r.With(manager).Get("/newsletter", a.adminNewsletter)
 	r.With(manager).Post("/newsletter/send", a.adminNewsletterSend)
 
+	// Live chat (support+)
+	r.With(support).Get("/chats", a.adminChats)
+	r.With(support).Get("/chats/{id}", a.adminChat)
+	r.With(support).Post("/chats/{id}/messages", a.adminChatReply)
+	r.With(support).Patch("/chats/{id}", a.adminChatStatus)
+
 	// Messages (support+)
 	r.With(support).Get("/messages", a.adminMessages)
 	r.With(support).Post("/messages/{id}/reply", a.adminReply)

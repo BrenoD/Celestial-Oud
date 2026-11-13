@@ -25,6 +25,13 @@ export const api: StoreApi = {
   unsubscribeNewsletter: (token) => request('/v1/newsletter/unsubscribe', { method: 'POST', body: { token } }),
   contact: (input) => request('/v1/contact', { method: 'POST', body: input }),
   listFaqs: () => request('/v1/content/faqs'),
+  startChat: (input) => request('/v1/chat', { method: 'POST', body: input }),
+  myChat: () => request('/v1/chat/mine', { retries: 0 }),
+  // The guest token travels in a header, never in the URL (no logs, no history).
+  getChat: (id, { after = 0, read = false, token }) =>
+    request(`/v1/chat/${id}${qs({ after, read: read ? 1 : undefined })}`, { retries: 0, headers: token ? { 'X-Chat-Token': token } : {} }),
+  sendChat: (id, message, token) =>
+    request(`/v1/chat/${id}/messages`, { method: 'POST', body: { message }, headers: token ? { 'X-Chat-Token': token } : {} }),
 };
 
 export type { T };

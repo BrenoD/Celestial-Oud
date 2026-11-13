@@ -191,6 +191,26 @@ export interface OrderAccess {
   email?: string | null;
 }
 
+/* ---------- Live chat ---------- */
+
+export interface ChatMessage {
+  id: number;
+  sender: 'customer' | 'agent';
+  body: string;
+  createdAt: string;
+}
+
+export interface ChatView {
+  id: number;
+  status: 'open' | 'closed';
+  customerName: string;
+  messages: ChatMessage[];
+  /** Agent replies the customer has not seen. */
+  unread: number;
+  /** Guests only, returned once when the chat starts. */
+  token?: string;
+}
+
 /* ---------- Account ---------- */
 
 export interface User {

@@ -31,6 +31,21 @@
   flex-direction: column;
   gap: 8px;
 }
+button.help__tile {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+/* The fastest way to get help stands out from the other tiles. */
+.card.help__tile--chat {
+  background: var(--espresso);
+  color: var(--white);
+  border-color: var(--espresso);
+}
+.card.help__tile--chat .muted {
+  color: var(--line-2);
+}
 .help__tile-title {
   font-family: var(--font-display);
   font-weight: 600;

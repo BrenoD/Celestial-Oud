@@ -28,6 +28,11 @@ export interface StoreApi {
   unsubscribeNewsletter(token: string): Promise<void>;
   contact(input: { name: string; email: string; orderId?: string; message: string }): Promise<void>;
   listFaqs(): Promise<T.Faq[]>;
+  /** Live chat. Guests pass the token returned by startChat. */
+  startChat(input: { name?: string; email?: string; message: string }): Promise<T.ChatView>;
+  myChat(): Promise<T.ChatView>;
+  getChat(id: number, opts: { after?: number; read?: boolean; token?: string | null }): Promise<T.ChatView>;
+  sendChat(id: number, message: string, token?: string | null): Promise<T.ChatMessage>;
 }
 
 export const api: StoreApi = adapter;

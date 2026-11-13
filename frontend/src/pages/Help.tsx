@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useContact, useFaqs } from '@/api/hooks';
 import { Accordion } from '@/components/ui/Accordion';
 import { Seo } from '@/components/ui/Seo';
 import { config } from '@/config';
+import { openChat } from '@/components/chat/chatStore';
 import './Help.css';
 
 export default function Help() {
@@ -19,6 +20,10 @@ export default function Help() {
     // The email goes in navigation state, not the URL (no personal data in logs or history).
     if (id) navigate(`/checkout/confirmed/${encodeURIComponent(id)}`, { state: { email: track.email.trim() } });
   };
+  // Links in chat emails land on /help#chat: open the chat straight away.
+  useEffect(() => {
+    if (location.hash === '#chat') openChat();
+  }, []);
   const submitContact = (e: FormEvent) => {
     e.preventDefault();
     contact.mutate({ ...msg, orderId: msg.orderId || undefined });
@@ -58,6 +63,12 @@ export default function Help() {
             Unopened items within {config.returnsDays} days.
           </span>
         </a>
+        <button id="chat" type="button" className="card help__tile help__tile--chat" onClick={openChat}>
+          <span className="help__tile-title">Live chat</span>
+          <span className="muted" style={{ fontSize: 14 }}>
+            Talk to the team now. We usually reply within minutes.
+          </span>
+        </button>
         <a href="#contact" className="card help__tile">
           <span className="help__tile-title">Contact us</span>
           <span className="muted" style={{ fontSize: 14 }}>

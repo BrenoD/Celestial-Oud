@@ -6,6 +6,7 @@ import { AnnouncementBar } from './AnnouncementBar';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { AddedToast } from './AddedToast';
+import { ChatLauncher } from '@/components/chat/ChatLauncher';
 import { Logo } from './Logo';
 import { LockIcon } from '@/components/ui/Icons';
 import { ScrollToTop } from './ScrollToTop';
@@ -36,6 +37,7 @@ export function StoreLayout() {
       </div>
       <Footer />
       <AddedToast />
+      <ChatLauncher />
     </div>
   );
 }

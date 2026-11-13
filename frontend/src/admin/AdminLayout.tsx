@@ -2,6 +2,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
 import { logout } from '@/api/client';
+import { usePolling } from '@/lib/usePolling';
 import { useMockApi } from '@/config';
 import { Logo } from '@/components/layout/Logo';
 import { Seo } from '@/components/ui/Seo';
@@ -15,8 +16,15 @@ function Nav({ section, role }: { section: string; role?: string }) {
   const activeIdx = NAV_GROUPS.findIndex((g) => g.items.some((i) => i.key === section));
   const [open, setOpen] = useState<number>(Math.max(0, activeIdx));
   useEffect(() => setOpen(Math.max(0, activeIdx)), [activeIdx]);
-  const { data } = useLoad(() => adminApi.dashboard().catch(() => null), []);
-  const badges: Record<string, number> = { orders: data?.pendingOrders ?? 0, reviews: data?.pendingReviews ?? 0, messages: data?.openMessages ?? 0 };
+  const { data, reload } = useLoad(() => adminApi.dashboard().catch(() => null), []);
+  // Keep the badges (new chats above all) fresh while the admin is open.
+  usePolling(reload, 30_000);
+  const badges: Record<string, number> = {
+    orders: data?.pendingOrders ?? 0,
+    reviews: data?.pendingReviews ?? 0,
+    messages: data?.openMessages ?? 0,
+    chats: data?.unreadChats ?? 0,
+  };
   return (
     <nav className="adm__nav" aria-label="Admin">
       {NAV_GROUPS.map((g, gi) => {

@@ -65,6 +65,18 @@ Migrations live in `backend/internal/db/migrations/` (embedded in the binary and
 | `content_items` | `content_blocks` (keyed CMS blocks: announcement bar, hero, promo banners, FAQ, legal pages) | yes | plain | — |
 | `subscriptions`, `affiliates*` | **deferred** to F3 per the handoff page map — not migrated | — | — | — |
 
+## Live chat (ported from printforge, extended)
+
+| printforge | Celestial | DB? | Schedule? | FK reuse |
+|---|---|---|---|---|
+| `chats` | `chats` — customer name/email, `user_id` (signed-in) **or** `guest_token_hash` (guest's secret, sha256), `status` open/closed, `customer_last_read_at` / `staff_last_read_at` (read state shared by the whole team), `last_message_at` | yes | plain | → users (set null); target of chat_messages |
+| `chat_messages` | `chat_messages` — `sender` customer/agent, `agent_id`, `body` (1–2000 chars) | yes | plain, append-only | → chats (cascade), → users (set null) |
+
+Polling (no websockets): the widget asks for messages after the last id every 4 s while open and every 30 s for
+the unread badge, only while the tab is visible; the admin inbox every 3–5 s. Limits: 5 new chats/h per IP,
+15 messages/min per conversation, 40/10 min per IP. One team email per unread burst; customers get an email only
+if they were not watching the chat in the last 2 minutes.
+
 ## Admin configuration
 
 | printforge | Celestial | DB? | Schedule? | FK reuse |

@@ -182,6 +182,10 @@ func render(key string, d map[string]any, site string) string {
 		return Layout("Welcome", h1("Your 10% welcome code")+p("Use <b>WELCOME10</b> at checkout on your first order.")+btn("Shop bestsellers", site+"/collections/bestsellers"), site)
 	case "review_request":
 		return Layout("How is it?", h1("How are you enjoying "+str(d, "product")+"?")+p("A short review helps other customers.")+btn("Write a review", site+"/account/orders"), site)
+	case "chat_reply":
+		return Layout("Reply", h1("We replied to your message")+Paragraphs(fmt.Sprint(d["reply"]))+btn("Continue the chat", site+"/help#chat"), site)
+	case "new_chat_message":
+		return Layout("Live chat", h1("New live chat message")+p("<b>"+str(d, "name")+"</b> ("+str(d, "email")+")")+Paragraphs(fmt.Sprint(d["body"]))+btn("Open the inbox", site+"/admin/chats"), site)
 	case "message_reply":
 		return Layout("Reply", h1("Re: "+str(d, "subject"))+p(strings.ReplaceAll(str(d, "reply"), "\n", "<br>")), site)
 	// Admin notifications

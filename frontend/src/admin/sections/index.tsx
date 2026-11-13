@@ -4,6 +4,7 @@ import { Navigate, useParams } from 'react-router-dom';
 const Dashboard = lazy(() => import('./Dashboard'));
 const Products = lazy(() => import('./Products'));
 const Orders = lazy(() => import('./Orders'));
+const Chats = lazy(() => import('./Chats'));
 const Lists = lazy(() => import('./Lists').then((m) => ({ default: m.Collections })));
 
 const pick = <K extends string>(loader: () => Promise<Record<K, ComponentType<Record<string, never>>>>, key: K) =>
@@ -33,6 +34,7 @@ const SECTIONS: Record<string, ComponentType<Record<string, never>>> = {
   reviews: pick(misc, 'Reviews'),
   newsletter: pick(misc, 'Newsletter'),
   messages: pick(misc, 'Messages'),
+  chats: Chats,
   'stock-alerts': pick(misc, 'StockAlerts'),
   content: pick(misc, 'Content'),
   settings: pick(misc, 'Settings'),

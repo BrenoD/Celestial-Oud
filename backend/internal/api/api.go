@@ -38,7 +38,7 @@ func (a *API) Router() http.Handler {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: a.cfg.CORSOrigins,
 		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id"},
+		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id", "X-Chat-Token"},
 		ExposedHeaders: []string{"X-Request-Id", "Retry-After"},
 		// Credentials only for the HttpOnly refresh cookie; origins are an explicit list.
 		AllowCredentials: true,
@@ -82,6 +82,12 @@ func (a *API) Router() http.Handler {
 		r.With(ip("order")).Post("/orders", a.createOrder)
 		r.With(ip("order-read")).Get("/orders/{id}", a.getOrder)
 		r.With(ip("order-read")).Post("/orders/{id}/confirm", a.confirmOrder)
+
+		// ── Live chat ──
+		r.With(ip("chat-start")).Post("/chat", a.startChat)
+		r.With(auth.Require, ip("chat-read")).Get("/chat/mine", a.myChat)
+		r.With(ip("chat-read")).Get("/chat/{id}", a.getChat)
+		r.With(ip("chat-send")).Post("/chat/{id}/messages", a.sendChatMessage)
 
 		// ── Auth ──
 		r.Route("/auth", func(r chi.Router) {

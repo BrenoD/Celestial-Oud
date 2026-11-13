@@ -18,6 +18,7 @@ const products = new Proxy([] as T.Product[], {
 });
 import type { StoreApi } from './index';
 
+let mockChat: T.ChatView | null = null;
 const latency = () => new Promise((r) => setTimeout(r, 120 + Math.random() * 180));
 
 const toSummary = (p: T.Product): T.ProductSummary => ({
@@ -276,6 +277,32 @@ export const api: StoreApi = {
   },
   async unsubscribeNewsletter() {
     await latency();
+  },
+  async startChat(input) {
+    await latency();
+    const now = new Date().toISOString();
+    mockChat = { id: 1, status: 'open', customerName: input.name ?? 'You', unread: 0, token: 'preview', messages: [{ id: 1, sender: 'customer', body: input.message, createdAt: now }] };
+    setTimeout(() => {
+      mockChat?.messages.push({ id: mockChat.messages.length + 1, sender: 'agent', body: 'Thanks for your message — this is the preview, so this reply is automatic. On the live site the team answers here.', createdAt: new Date().toISOString() });
+    }, 1500);
+    return { ...mockChat, messages: [...mockChat.messages] };
+  },
+  async myChat() {
+    await latency();
+    if (!mockChat) throw new Error('No chat');
+    return { ...mockChat, messages: [...mockChat.messages] };
+  },
+  async getChat(_id, { after = 0 }) {
+    await latency();
+    if (!mockChat) throw new Error('No chat');
+    return { ...mockChat, unread: 0, messages: mockChat.messages.filter((m) => m.id > after) };
+  },
+  async sendChat(_id, message) {
+    await latency();
+    if (!mockChat) throw new Error('No chat');
+    const m: T.ChatMessage = { id: mockChat.messages.length + 1, sender: 'customer', body: message, createdAt: new Date().toISOString() };
+    mockChat.messages.push(m);
+    return m;
   },
   async contact() {
     await latency();

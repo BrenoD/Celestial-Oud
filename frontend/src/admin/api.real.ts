@@ -47,6 +47,12 @@ export const realAdminApi: AdminApi = {
     list: () => r('/v1/admin/newsletter'),
     send: (emails, subject, body) => r('/v1/admin/newsletter/send', { method: 'POST', body: { emails, subject, body } }),
   },
+  chats: {
+    list: (status) => r(`/v1/admin/chats${qs({ status })}`),
+    get: (id, after) => r(`/v1/admin/chats/${id}${qs({ after })}`),
+    reply: (id, message) => r(`/v1/admin/chats/${id}/messages`, { method: 'POST', body: { message } }),
+    setStatus: (id, status) => r(`/v1/admin/chats/${id}`, { method: 'PATCH', body: { status } }),
+  },
   messages: {
     list: (status) => r(`/v1/admin/messages${qs({ status })}`),
     reply: (id, reply) => r(`/v1/admin/messages/${id}/reply`, { method: 'POST', body: { reply } }),

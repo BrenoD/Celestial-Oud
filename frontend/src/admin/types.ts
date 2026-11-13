@@ -54,6 +54,7 @@ export interface Dashboard {
   pendingOrders: number;
   pendingReviews: number;
   openMessages: number;
+  unreadChats?: number;
   lowStock: Array<{ name: string; sku: string; label: string; stock: number }>;
   recentOrders: AdminOrder[];
   revenueByDay: Array<{ day: string; revenue: number; orders: number }>;
@@ -211,6 +212,19 @@ export interface AuditRow {
 
 export type { Address, Collection };
 
+export interface AdminChat {
+  id: number;
+  userId?: string;
+  customerName: string;
+  customerEmail: string;
+  status: 'open' | 'closed';
+  lastMessageAt: string;
+  createdAt: string;
+  unread: number;
+  lastMessage?: string;
+  messages?: Array<{ id: number; sender: 'customer' | 'agent'; body: string; createdAt: string }>;
+}
+
 export interface AdminApi {
   dashboard(): Promise<Dashboard>;
   analytics(period: number): Promise<Breakdown>;
@@ -236,6 +250,12 @@ export interface AdminApi {
   promotions: { list(): Promise<Promotion[]>; create(p: Partial<Promotion>): Promise<Promotion>; remove(id: number): Promise<void> };
   reviews: { list(pending?: boolean): Promise<AdminReview[]>; update(id: number, patch: Partial<AdminReview>): Promise<void>; remove(id: number): Promise<void> };
   newsletter: { list(): Promise<Subscriber[]>; send(emails: string[], subject: string, body: string): Promise<{ sent: number; total: number }> };
+  chats: {
+    list(status?: string): Promise<AdminChat[]>;
+    get(id: number, after?: number): Promise<AdminChat>;
+    reply(id: number, message: string): Promise<NonNullable<AdminChat['messages']>[number]>;
+    setStatus(id: number, status: 'open' | 'closed'): Promise<void>;
+  };
   messages: { list(status?: string): Promise<Message[]>; reply(id: number, reply: string): Promise<Message>; setStatus(id: number, status: string): Promise<void> };
   delivery: { list(): Promise<DeliveryMethodRow[]>; save(m: Partial<DeliveryMethodRow>): Promise<DeliveryMethodRow>; remove(id: string): Promise<void> };
   content: { list(): Promise<ContentBlock[]>; save(key: string, block: Partial<ContentBlock>): Promise<void>; remove(key: string): Promise<void> };

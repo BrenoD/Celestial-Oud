@@ -5,6 +5,7 @@
 import { collections as seedCollections, deliveryMethods as seedDelivery, faqs, products as seedProducts } from '@/data/catalogue';
 import type { Order, Product } from '@/types';
 import type {
+  AdminChat,
   AdminApi, AdminOrder, AdminProduct, AdminProductSummary, AdminReview, BlogPost, ContentBlock, Customer, DeliveryMethodRow,
   DiscountCode, Message, Promotion, SectionRow, Settings, Staff, StockAlert, Subscriber, AuditRow,
 } from './types';
@@ -170,6 +171,15 @@ const transitions: Record<string, string[]> = {
   dispatched: ['delivered', 'refunded'], delivered: ['refunded'],
 };
 
+const demoChats: AdminChat[] = [
+  {
+    id: 1, customerName: 'Amelia R.', customerEmail: 'amelia@example.co.uk', status: 'open', unread: 1,
+    createdAt: new Date(Date.now() - 6e5).toISOString(), lastMessageAt: new Date(Date.now() - 6e5).toISOString(),
+    lastMessage: 'Is Royal Oud long lasting on skin?',
+    messages: [{ id: 1, sender: 'customer', body: 'Is Royal Oud long lasting on skin?', createdAt: new Date(Date.now() - 6e5).toISOString() }],
+  },
+];
+
 export const mockAdminApi: AdminApi = {
   async dashboard() {
     await latency();
@@ -186,7 +196,7 @@ export const mockAdminApi: AdminApi = {
     return {
       totalRevenue: paid.reduce((n, o) => n + o.total, 0), totalOrders: paid.length, totalCustomers: s.customers.length,
       pendingOrders: s.orders.filter((o) => ['paid', 'processing'].includes(o.status)).length,
-      pendingReviews: s.reviews.filter((r) => !r.approved).length, openMessages: s.messages.filter((m) => m.status === 'open').length,
+      pendingReviews: s.reviews.filter((r) => !r.approved).length, openMessages: s.messages.filter((m) => m.status === 'open').length, unreadChats: demoChats.filter((c) => c.unread > 0).length,
       lowStock: low, recentOrders: s.orders.slice(0, 8), revenueByDay: days,
       topProducts: Object.entries(units).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.units - a.units).slice(0, 5),
     };
@@ -332,6 +342,34 @@ export const mockAdminApi: AdminApi = {
   newsletter: {
     async list() { await latency(); return load().subscribers; },
     async send(emails, subject) { await latency(); audit('newsletter', 'campaign', subject, { recipients: emails.length }); return { sent: emails.length, total: emails.length }; },
+  },
+  // Preview only: one demo conversation kept in memory.
+  chats: {
+    async list(status) {
+      await latency();
+      return demoChats.filter((c) => !status || c.status === status).map((c) => ({ ...c, messages: undefined }));
+    },
+    async get(id, after = 0) {
+      await latency();
+      const c = demoChats.find((x) => x.id === id);
+      if (!c) throw new Error('Not found');
+      c.unread = 0;
+      return { ...c, messages: (c.messages ?? []).filter((m) => m.id > after) };
+    },
+    async reply(id, message) {
+      await latency();
+      const c = demoChats.find((x) => x.id === id)!;
+      const m = { id: (c.messages?.length ?? 0) + 1, sender: 'agent' as const, body: message, createdAt: nowISO() };
+      c.messages = [...(c.messages ?? []), m];
+      c.lastMessage = message;
+      c.status = 'open';
+      return m;
+    },
+    async setStatus(id, status) {
+      await latency();
+      const c = demoChats.find((x) => x.id === id);
+      if (c) c.status = status;
+    },
   },
   messages: {
     async list(status) { await latency(); return load().messages.filter((m) => !status || m.status === status); },

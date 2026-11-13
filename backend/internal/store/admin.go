@@ -291,6 +291,7 @@ type Dashboard struct {
 	PendingOrders  int              `json:"pendingOrders"`
 	PendingReviews int              `json:"pendingReviews"`
 	OpenMessages   int              `json:"openMessages"`
+	UnreadChats    int              `json:"unreadChats"`
 	LowStock       []map[string]any `json:"lowStock"`
 	RecentOrders   []Order          `json:"recentOrders"`
 	RevenueByDay   []DayPoint       `json:"revenueByDay"`
@@ -317,6 +318,7 @@ func (s *Store) Dashboard(ctx context.Context) (Dashboard, error) {
 	if err != nil {
 		return d, err
 	}
+	d.UnreadChats = s.UnreadChats(ctx)
 	rows, err := s.db.Query(ctx, `select p.name, s.sku, s.label, s.stock from product_sizes s join products p on p.id = s.product_id
 		where p.status = 'active' and not s.is_sample and s.stock <= 5 order by s.stock, p.name limit 20`)
 	if err != nil {

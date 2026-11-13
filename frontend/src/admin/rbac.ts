@@ -15,6 +15,7 @@ export const SECTION_VIEW_ROLE: Record<string, Role> = {
   payments: 'manager',
   users: 'manager',
   messages: 'support',
+  chats: 'support',
   audit: 'manager',
 };
 
@@ -26,6 +27,7 @@ export const SECTION_WRITE_ROLE: Record<string, Role> = {
   orders: 'support',
   shipments: 'support',
   messages: 'support',
+  chats: 'support',
   discounts: 'manager',
   promotions: 'manager',
   reviews: 'manager',
@@ -52,7 +54,7 @@ export interface NavGroup {
 
 /** Same grouping as printforge AdminShell NAV_GROUPS, adapted to the perfume store. */
 export const NAV_GROUPS: NavGroup[] = [
-  { label: 'Operations', items: [{ key: 'dashboard', label: 'Dashboard' }, { key: 'orders', label: 'Orders' }, { key: 'shipments', label: 'Shipments' }, { key: 'messages', label: 'Messages' }] },
+  { label: 'Operations', items: [{ key: 'dashboard', label: 'Dashboard' }, { key: 'orders', label: 'Orders' }, { key: 'shipments', label: 'Shipments' }, { key: 'chats', label: 'Live chat' }, { key: 'messages', label: 'Messages' }] },
   { label: 'Catalogue', items: [{ key: 'products', label: 'Products' }, { key: 'collections', label: 'Collections' }, { key: 'stock-alerts', label: 'Stock alerts' }] },
   { label: 'Sales', items: [{ key: 'customers', label: 'Customers' }, { key: 'analytics', label: 'Analytics' }, { key: 'payments', label: 'Payments' }] },
   { label: 'Marketing', items: [{ key: 'discounts', label: 'Discount codes' }, { key: 'promotions', label: 'Promotions' }, { key: 'reviews', label: 'Reviews' }, { key: 'newsletter', label: 'Newsletter' }] },
